@@ -219,18 +219,18 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
 .an-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;overflow:hidden;box-shadow:0 1px 5px rgba(26,111,212,.05);}
 .an-card-title{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);margin-bottom:12px;}
-.rank-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);position:relative;}
+.rank-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
 .rank-row:last-child{border-bottom:none;}
-.rank-row.leader{background:linear-gradient(90deg,rgba(184,134,11,.06),transparent);margin:0 -16px;padding:6px 16px;}
+.rank-row.leader{background:linear-gradient(90deg,rgba(184,134,11,.07),transparent);margin:0 -16px;padding:7px 16px;}
+.rank-crown{width:18px;flex-shrink:0;text-align:center;font-size:13px;line-height:1;}
 .rank-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim);width:18px;flex-shrink:0;font-weight:500;}
 .rank-name{font-size:12px;color:var(--text);flex:1;min-width:0;font-weight:500;}
 .rank-sub{font-size:10px;color:var(--text-dim);}
 .rank-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);white-space:nowrap;font-weight:500;}
 .rank-bar-bg{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:2px;}
 .rank-bar-fill{height:100%;border-radius:2px;}
-.crown{font-size:13px;margin-left:4px;}
 
-.plan-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.plan-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
 .plan-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(26,111,212,.05);}
 .plan-card.leader-card{border-color:rgba(184,134,11,.4);background:var(--gold-bg);}
 .plan-card-name{font-size:13px;color:var(--text);margin-bottom:1px;font-weight:600;}
@@ -244,7 +244,7 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .log-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);}
 .log-table td{padding:9px 10px;font-size:12px;color:var(--text-mid);border-bottom:1px solid var(--border);}
 .log-table tr:last-child td{border-bottom:none;}
-.log-table td.mono{font-family:'DM Mono',monospace;color:var(--text);font-size:12px;}
+.log-table td.mono{font-family:'DM Mono',monospace;color:var(--text);font-size:12px;white-space:nowrap;}
 .log-table tr:hover td{background:var(--surface2);}
 .badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;}
 .b-dl{background:rgba(184,134,11,.12);color:var(--gold);}
@@ -408,6 +408,15 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .room-chk.home{background:#E8F9F3;border-color:var(--green);color:var(--green);font-weight:600;cursor:default;}
 .room-chk input{display:none;}
 
+
+/* ── ПРОГНОЗ В КАРТОЧКЕ ТОЧКИ ── */
+.fc-block{margin-top:11px;padding-top:10px;border-top:1px solid var(--border);}
+.fc-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:3px 0;}
+.fc-lbl{font-size:10px;color:var(--text-dim);}
+.fc-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);white-space:nowrap;}
+.fc-proj{margin-top:5px;padding-top:6px;border-top:1px dashed var(--border);}
+.fc-proj .fc-lbl{font-weight:600;color:var(--text-mid);}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;font-size:12px;font-weight:500;border-radius:10px;transition:transform .3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
 #toast.show{transform:translateX(-50%) translateY(0);}
@@ -489,7 +498,7 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="order-num-wrap" style="flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:10px;flex:1;">
           <span class="order-num-label">№ Заказа Bitrix24</span>
-          <input class="order-num-input" id="order-number" placeholder="Напр. ORD-12345" style="flex:1;">
+          <input class="order-num-input" id="order-number" placeholder="Напр. RUD2C041158915" style="flex:1;">
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span class="order-num-label">Дата продажи</span>
@@ -615,7 +624,7 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
     <input type="hidden" id="edit-sale-id">
     <div class="form-row c2" style="margin-bottom:12px;">
       <div class="fg"><label class="fl">Дата</label><input type="date" class="fc" id="edit-sale-date"></div>
-      <div class="fg"><label class="fl">№ Заказа</label><input class="fc" id="edit-order-num" placeholder="ORD-12345"></div>
+      <div class="fg"><label class="fl">№ Заказа</label><input class="fc" id="edit-order-num" placeholder="RUD2C041158915"></div>
     </div>
     <div class="section-label" style="margin-bottom:8px;">Позиции</div>
     <div class="items-hdr"><span>Наименование</span><span>Категория</span><span>Кол-во</span><span>Сумма, ₽</span><span></span></div>
@@ -877,41 +886,112 @@ function renderAnalytics(){
 function renderAnalyticsMonth(m){
   DB=loadDB();const sales=DB.sales.filter(s=>s.date.startsWith(m));
   const selMap={};
-  sales.forEach(sale=>{if(!selMap[sale.sellerId])selMap[sale.sellerId]={total:0,orders:0,items:0,machines:0,coffee:0,other:0,ck:[]};const sd=selMap[sale.sellerId];sd.total+=sale.total;sd.orders++;sd.ck.push(sale.total);sale.items.forEach(item=>{sd.items+=item.qty;if(MACHINE_CATS.includes(item.cat))sd.machines+=item.qty;if(item.cat==='cf')sd.coffee+=item.qty;if(!MACHINE_CATS.includes(item.cat)&&item.cat!=='cf')sd.other+=item.total;});});
-  const sellers=Object.entries(selMap).map(([id,d])=>({id,...d,avg:d.ck.length?Math.round(d.ck.reduce((a,b)=>a+b,0)/d.ck.length):0}));
+  sales.forEach(sale=>{
+    if(!selMap[sale.sellerId])selMap[sale.sellerId]={total:0,orders:0,machines:0,coffeeRub:0,other:0,machineCks:[]};
+    const sd=selMap[sale.sellerId];
+    sd.total+=sale.total;sd.orders++;
+    let hasMachine=false;
+    sale.items.forEach(item=>{
+      if(MACHINE_CATS.includes(item.cat)){sd.machines+=item.qty;hasMachine=true;}
+      if(item.cat==='cf')sd.coffeeRub+=item.total;
+      if(!MACHINE_CATS.includes(item.cat)&&item.cat!=='cf')sd.other+=item.total;
+    });
+    // Средний чек считаем только по чекам, где есть кофемашина
+    if(hasMachine) sd.machineCks.push(sale.total);
+  });
+  const sellers=Object.entries(selMap).map(([id,d])=>({
+    id,...d,
+    avgMachine: d.machineCks.length ? Math.round(d.machineCks.reduce((a,b)=>a+b,0)/d.machineCks.length) : 0
+  }));
   const N=5;
-  function rankCard(title,arr,valFn,color,suffix=''){
-    const sorted=[...arr].sort((a,b)=>valFn(b)-valFn(a)).filter(x=>valFn(x)>0);
+
+  function rankCard(title,valFn,color,suffix=''){
+    const sorted=[...sellers].sort((a,b)=>valFn(b)-valFn(a)).filter(x=>valFn(x)>0);
     const max=sorted[0]?valFn(sorted[0])||1:1;
-    return`<div class="an-card"><div class="an-card-title">${title}</div>${sorted.slice(0,N).map((item,i)=>{const s=DB.sellers.find(x=>x.id===item.id);const val=valFn(item);const pct=Math.round((val/max)*100);const isL=i===0;return`<div class="rank-row${isL?' leader':''}"><div class="rank-num">${i+1}</div><div style="flex:1;min-width:0"><div class="rank-name">${s?.name||'—'}</div><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${color}"></div></div></div><div class="rank-val" style="margin-right:${isL?'18px':'0'}">${val.toLocaleString('ru-RU')}${suffix}</div>${isL?'<span class="crown" style="font-size:14px;flex-shrink:0">👑</span>':''}</div>`;}).join('')||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет данных</div>'}</div>`;
+    return`<div class="an-card"><div class="an-card-title">${title}</div>${
+      sorted.slice(0,N).map((item,i)=>{
+        const s=DB.sellers.find(x=>x.id===item.id);
+        const val=valFn(item);
+        const pct=Math.round((val/max)*100);
+        const isL=i===0;
+        return`<div class="rank-row${isL?' leader':''}">
+          <div class="rank-num">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div class="rank-name">${s?.name||'—'}</div>
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+          </div>
+          <div class="rank-val">${val.toLocaleString('ru-RU')}${suffix}</div>
+          <div class="rank-crown">${isL?'👑':''}</div>
+        </div>`;
+      }).join('')||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет данных</div>'
+    }</div>`;
   }
-  // Plan cards
-  const planCardsHTML=DB.regions.map(region=>DB.cities.filter(c=>c.regionId===region.id).map(city=>DB.showrooms.filter(r=>r.cityId===city.id).map(room=>{
-    const fact=sales.filter(s=>s.showroomId===room.id).reduce((s,x)=>s+x.total,0);
-    const plan=DB.plans[`${room.id}_${m}`]||0;
-    const pct=plan>0?Math.round((fact/plan)*100):null;
-    const allPcts=DB.showrooms.map(r2=>{const p2=DB.plans[`${r2.id}_${m}`]||0;const f2=sales.filter(s=>s.showroomId===r2.id).reduce((s,x)=>s+x.total,0);return p2>0?Math.round((f2/p2)*100):-1;});
-    const isLeader=pct!==null&&pct===Math.max(...allPcts)&&pct>0;
-    const col=pct>=100?'var(--green)':pct>=70?'var(--blue)':'var(--red)';
-    return`<div class="plan-card${isLeader?' leader-card':''}">
-      ${isLeader?'<div class="leader-badge">👑 Лидер</div>':''}
-      <div class="plan-card-name">${room.name}</div>
-      <div class="plan-card-city">${region.name} › ${city.name}</div>
-      <div class="plan-card-pct" style="color:${col}">${pct!==null?pct+'%':'—'}</div>
-      <div class="plan-bar-bg" style="margin-bottom:6px"><div class="plan-bar-fill" style="width:${Math.min(pct||0,100)}%;background:${col}"></div></div>
-      <div class="plan-card-detail">${fmoney(fact)}${plan?' / '+fmoney(plan):' · план не задан'}</div>
-    </div>`;
-  }).join('')).join('')).join('');
+
+  // ── Карточки точек с прогнозом ──
+  const now=new Date();
+  const [yy,mm]=m.split('-').map(Number);
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  const isCurrentMonth=(yy===now.getFullYear()&&mm===now.getMonth()+1);
+  const isPastMonth=(yy<now.getFullYear())||(yy===now.getFullYear()&&mm<now.getMonth()+1);
+  const daysPassed=isCurrentMonth?now.getDate():(isPastMonth?daysInMonth:0);
+  const daysLeft=Math.max(daysInMonth-daysPassed,0);
+
+  const planCardsHTML=DB.regions.map(region=>DB.cities.filter(ci=>ci.regionId===region.id).map(city=>
+    DB.showrooms.filter(r=>r.cityId===city.id).map(room=>{
+      const fact=sales.filter(s=>s.showroomId===room.id).reduce((a,b)=>a+b.total,0);
+      const plan=DB.plans[`${room.id}_${m}`]||0;
+      const pct=plan>0?Math.round((fact/plan)*100):null;
+      const allPcts=DB.showrooms.map(r2=>{
+        const p2=DB.plans[`${r2.id}_${m}`]||0;
+        const f2=sales.filter(s=>s.showroomId===r2.id).reduce((a,b)=>a+b.total,0);
+        return p2>0?Math.round((f2/p2)*100):-1;
+      });
+      const isLeader=pct!==null&&pct===Math.max(...allPcts)&&pct>0;
+      const col=pct>=100?'var(--green)':pct>=70?'var(--blue)':'var(--red)';
+
+      // Прогноз и отклонение
+      let forecastHTML='';
+      if(plan>0&&daysPassed>0){
+        const shouldBe=Math.round(plan/daysInMonth*daysPassed);   // сколько должно быть на сегодня
+        const dev=fact-shouldBe;                                   // отклонение в рублях
+        const devPct=shouldBe>0?Math.round((dev/shouldBe)*100):0;  // отклонение в %
+        const perDayNeed=daysLeft>0?Math.round(Math.max(plan-fact,0)/daysLeft):0;
+        const perDayAvg=Math.round(fact/daysPassed);
+        const projection=Math.round(perDayAvg*daysInMonth);        // прогноз на конец месяца
+        const projPct=Math.round((projection/plan)*100);
+        const devCol=dev>=0?'var(--green)':'var(--red)';
+        forecastHTML=`
+          <div class="fc-block">
+            <div class="fc-row"><span class="fc-lbl">Должно быть на сегодня</span><span class="fc-val">${fmoney(shouldBe)}</span></div>
+            <div class="fc-row"><span class="fc-lbl">Отклонение</span><span class="fc-val" style="color:${devCol}">${dev>=0?'+':'−'}${fmoney(Math.abs(dev))} (${dev>=0?'+':'−'}${Math.abs(devPct)}%)</span></div>
+            <div class="fc-row"><span class="fc-lbl">В день сейчас</span><span class="fc-val">${fmoney(perDayAvg)}</span></div>
+            ${daysLeft>0?`<div class="fc-row"><span class="fc-lbl">Нужно в день (${daysLeft} дн.)</span><span class="fc-val" style="color:var(--blue);font-weight:600">${fmoney(perDayNeed)}</span></div>`:''}
+            <div class="fc-row fc-proj"><span class="fc-lbl">Прогноз на конец месяца</span><span class="fc-val" style="color:${projPct>=100?'var(--green)':'var(--red)'}">${fmoney(projection)} · ${projPct}%</span></div>
+          </div>`;
+      }
+
+      return`<div class="plan-card${isLeader?' leader-card':''}">
+        ${isLeader?'<div class="leader-badge">👑 Лидер</div>':''}
+        <div class="plan-card-name">${room.name}</div>
+        <div class="plan-card-city">${region.name} › ${city.name}</div>
+        <div class="plan-card-pct" style="color:${col}">${pct!==null?pct+'%':'—'}</div>
+        <div class="plan-bar-bg" style="margin-bottom:6px"><div class="plan-bar-fill" style="width:${Math.min(pct||0,100)}%;background:${col}"></div></div>
+        <div class="plan-card-detail">${fmoney(fact)}${plan?' / '+fmoney(plan):' · план не задан'}</div>
+        ${forecastHTML}
+      </div>`;
+    }).join('')).join('')).join('');
 
   document.getElementById('analytics-grid').innerHTML=
-    rankCard('🏆 Оборот, ₽',sellers,d=>d.total,'#1A6FD4',' ₽')+
-    rankCard('☕ Кофемашины',sellers,d=>d.machines,'#D4620A',' шт')+
-    rankCard('🫘 Кофе',sellers,d=>d.coffee,'#8B5020',' пач')+
-    rankCard('📦 Другие позиции',sellers,d=>Math.round(d.other),'#7B4FD8',' ₽')+
-    rankCard('🧾 Средний чек',sellers,d=>d.avg,'#0E9F8E',' ₽')+
-    `<div class="an-card"><div class="an-card-title">📋 Заказов за месяц</div>${[...sellers].sort((a,b)=>b.orders-a.orders).slice(0,N).map((item,i)=>{const s=DB.sellers.find(x=>x.id===item.id);return`<div class="rank-row${i===0?' leader':''}"><div class="rank-num">${i+1}</div><div class="rank-name" style="flex:1">${s?.name||'—'}</div><div class="rank-val" style="margin-right:${i===0?'18px':'0'}">${item.orders}</div>${i===0?'<span class="crown" style="font-size:14px;flex-shrink:0">👑</span>':''}</div>`;}).join('')||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет данных</div>'}</div>`;
+    rankCard('🏆 Оборот, ₽',        d=>d.total,               '#1A6FD4',' ₽')+
+    rankCard('☕ Кофемашины',        d=>d.machines,            '#D4620A',' шт')+
+    rankCard('💰 Оборот кофе, ₽',    d=>Math.round(d.coffeeRub),'#8B5020',' ₽')+
+    rankCard('📦 Другие позиции, ₽', d=>Math.round(d.other),   '#7B4FD8',' ₽')+
+    rankCard('🧾 Средний чек с кофемашиной', d=>d.avgMachine,  '#0E9F8E',' ₽')+
+    rankCard('📋 Заказов за месяц',  d=>d.orders,              '#4A90E2','');
 
-  document.getElementById('analytics-plans').innerHTML=`<div class="section-label" style="margin:4px 0 12px">🎯 Выполнение плана по точкам</div><div class="plan-progress-grid">${planCardsHTML||'<div style="color:var(--text-dim);font-size:13px">Нет данных</div>'}</div>`;
+  document.getElementById('analytics-plans').innerHTML=
+    `<div class="section-label" style="margin:4px 0 12px">🎯 Выполнение плана и прогноз</div>
+     <div class="plan-progress-grid">${planCardsHTML||'<div style="color:var(--text-dim);font-size:13px">Нет данных</div>'}</div>`;
 }
 
 // ══════════════════════════════════
@@ -925,20 +1005,40 @@ function renderCoffee(){
 function renderCoffeeMonth(m){
   DB=loadDB();const sales=DB.sales.filter(s=>s.date.startsWith(m));
   const cont=document.getElementById('coffee-content');cont.innerHTML='';
-  let totalM=0,totalC=0;
-  DB.regions.forEach(region=>{DB.cities.filter(c=>c.regionId===region.id).forEach(city=>{DB.showrooms.filter(r=>r.cityId===city.id).forEach(room=>{
-    const rs=sales.filter(s=>s.showroomId===room.id);let m2=0,c2=0;
-    rs.forEach(sale=>sale.items.forEach(item=>{if(MACHINE_CATS.includes(item.cat))m2+=item.qty;if(item.cat==='cf')c2+=item.qty;}));
-    totalM+=m2;totalC+=c2;if(!m2&&!c2)return;
-    const pct=m2>0?Math.round((c2/m2)*100):null;const ok=pct!==null&&pct>=100;
-    const block=document.createElement('div');block.className='coffee-metric';
-    block.innerHTML=`<div class="coffee-metric-hdr"><div><div style="font-size:13px;color:var(--text);font-weight:600">${room.name}</div><div style="font-size:10px;color:var(--text-dim)">${region.name} › ${city.name}</div></div><div style="text-align:right"><div class="coffee-pct ${ok?'ok':'low'}">${pct!==null?pct+'%':'—'}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${c2} пачек / ${m2} машин</div></div></div>${m2>0?`<div class="plan-bar-bg"><div class="plan-bar-fill ${ok?'pbar-over':'pbar-low'}" style="width:${Math.min(pct||0,100)}%"></div></div>`:''}`;
-    cont.appendChild(block);
-  });});});
+  let totalM=0,totalC=0,totalCRub=0;
+  DB.regions.forEach(region=>{DB.cities.filter(ci=>ci.regionId===region.id).forEach(city=>{
+    DB.showrooms.filter(r=>r.cityId===city.id).forEach(room=>{
+      const rs=sales.filter(s=>s.showroomId===room.id);
+      let m2=0,c2=0,rub2=0;
+      rs.forEach(sale=>sale.items.forEach(item=>{
+        if(MACHINE_CATS.includes(item.cat))m2+=item.qty;
+        if(item.cat==='cf'){c2+=item.qty;rub2+=item.total;}
+      }));
+      totalM+=m2;totalC+=c2;totalCRub+=rub2;
+      if(!m2&&!c2)return;
+      const pct=m2>0?Math.round((c2/m2)*100):null;
+      const ok=pct!==null&&pct>=100;
+      const block=document.createElement('div');block.className='coffee-metric';
+      block.innerHTML=`<div class="coffee-metric-hdr">
+        <div><div style="font-size:13px;color:var(--text);font-weight:600">${room.name}</div>
+        <div style="font-size:10px;color:var(--text-dim)">${region.name} › ${city.name}</div></div>
+        <div style="text-align:right">
+          <div class="coffee-pct ${ok?'ok':'low'}">${pct!==null?pct+'%':'—'}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${c2} пачек / ${m2} машин · ${fmoney(rub2)}</div>
+        </div></div>
+        ${m2>0?`<div class="plan-bar-bg"><div class="plan-bar-fill ${ok?'pbar-over':'pbar-low'}" style="width:${Math.min(pct||0,100)}%"></div></div>`:''}`;
+      cont.appendChild(block);
+    });});});
   if(totalM||totalC){
     const pct=totalM>0?Math.round((totalC/totalM)*100):null;
+    const over=pct!==null&&pct>100?pct-100:0;
     const sumDiv=document.createElement('div');sumDiv.className='stat-row';sumDiv.style.marginTop='16px';
-    sumDiv.innerHTML=`<div class="stat-box"><div class="stat-lbl">Кофемашин всего</div><div class="stat-val">${totalM} шт.</div></div><div class="stat-box"><div class="stat-lbl">Кофе всего</div><div class="stat-val">${totalC} пачек</div></div><div class="stat-box"><div class="stat-lbl">Выполнение</div><div class="stat-val ${pct>=100?'green':'red'}">${pct!==null?pct+'%':'—'}</div></div><div class="stat-box"><div class="stat-lbl">Бонус за кофе</div><div class="stat-val ${pct>=100?'green':'red'}">${pct>=100?'5 000 ₽ ✓':'Не заработан'}</div></div>`;
+    sumDiv.innerHTML=`
+      <div class="stat-box"><div class="stat-lbl">Кофемашин всего</div><div class="stat-val">${totalM} шт.</div></div>
+      <div class="stat-box"><div class="stat-lbl">Кофе всего</div><div class="stat-val">${totalC} пачек</div></div>
+      <div class="stat-box"><div class="stat-lbl">Оборот кофе</div><div class="stat-val blue">${fmoney(totalCRub)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Выполнение</div><div class="stat-val ${pct>=100?'green':'red'}">${pct!==null?pct+'%':'—'}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Перевыполнение</div><div class="stat-val ${over>0?'green':''}">${over>0?'+'+over+'%':'—'}</div></div>`;
     cont.appendChild(sumDiv);
   }
   if(!cont.children.length)cont.innerHTML='<div class="empty"><div class="empty-icon">☕</div><div class="empty-text">Нет данных</div></div>';
@@ -1264,19 +1364,22 @@ function sellerMetrics(sellerId, monthKey){
   let sales=DB.sales.filter(s=>s.sellerId===sellerId);
   if(monthKey && monthKey!=='all') sales=sales.filter(s=>s.date.startsWith(monthKey));
   let total=0,coffeeRub=0,machines=0,coffeeQty=0,otherRub=0;
-  const cks=[];
+  const cks=[],machineCks=[];
   sales.forEach(sale=>{
     total+=sale.total; cks.push(sale.total);
+    let hasMachine=false;
     sale.items.forEach(it=>{
       if(it.cat==='cf'){ coffeeRub+=it.total; coffeeQty+=it.qty; }
-      else if(MACHINE_CATS.includes(it.cat)){ machines+=it.qty; }
+      else if(MACHINE_CATS.includes(it.cat)){ machines+=it.qty; hasMachine=true; }
       else { otherRub+=it.total; }
     });
+    if(hasMachine) machineCks.push(sale.total);
   });
   return {
     total, coffeeRub, coffeeQty, machines, otherRub,
     orders: sales.length,
-    avg: cks.length?Math.round(cks.reduce((a,b)=>a+b,0)/cks.length):0
+    avg: cks.length?Math.round(cks.reduce((a,b)=>a+b,0)/cks.length):0,
+    avgMachine: machineCks.length?Math.round(machineCks.reduce((a,b)=>a+b,0)/machineCks.length):0
   };
 }
 
@@ -1293,6 +1396,21 @@ function sellerMonthly(sellerId){
     });
   });
   return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+
+
+// Стабильный цвет продавца внутри точки (совпадает в карточке и в сравнении)
+const SELLER_PALETTE=[
+  {solid:'#1A6FD4',grad:'linear-gradient(135deg,#1A6FD4,#4A90E2)'},
+  {solid:'#0E9F8E',grad:'linear-gradient(135deg,#0E9F8E,#12C4AF)'},
+  {solid:'#7B4FD8',grad:'linear-gradient(135deg,#7B4FD8,#A17BE8)'},
+  {solid:'#D4620A',grad:'linear-gradient(135deg,#D4620A,#F08A3C)'},
+];
+function sellerColor(sellerId,roomId){
+  const list=DB.sellers.filter(s=>!s.archived&&sellerRooms(s).includes(roomId)&&s.role!=='admin')
+    .concat(DB.sellers.filter(s=>!s.archived&&s.role==='admin'&&s.showroomId===roomId));
+  const idx=list.findIndex(s=>s.id===sellerId);
+  return SELLER_PALETTE[(idx<0?0:idx)%SELLER_PALETTE.length];
 }
 
 function renderPoints(){
@@ -1365,10 +1483,11 @@ function viewSellers(){
   html+=`<div class="sr-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">`;
   sellers.forEach(s=>{
     const mt=sellerMetrics(s.id,m);
+    const sc=sellerColor(s.id,room.id);
     html+=`<div class="seller-card" onclick="openSellerCard('${s.id}')">
       <div class="seller-card-hdr">
         <div style="display:flex;gap:11px;align-items:center">
-          <div class="seller-avatar">${initials(s.name)}</div>
+          <div class="seller-avatar" style="background:${sc.grad}">${initials(s.name)}</div>
           <div><div class="seller-card-name">${s.name}</div>
           <div class="seller-card-role">${s.role==='admin'?'Администратор':'Продавец'}</div></div>
         </div>
@@ -1377,7 +1496,7 @@ function viewSellers(){
         <div class="sc-metric"><div class="sc-metric-lbl">Оборот</div><div class="sc-metric-val">${fmoney(mt.total)}</div></div>
         <div class="sc-metric"><div class="sc-metric-lbl">Кофемашины</div><div class="sc-metric-val">${mt.machines} шт</div></div>
         <div class="sc-metric"><div class="sc-metric-lbl">Оборот кофе</div><div class="sc-metric-val">${fmoney(mt.coffeeRub)}</div></div>
-        <div class="sc-metric"><div class="sc-metric-lbl">Средний чек</div><div class="sc-metric-val">${fmoney(mt.avg)}</div></div>
+        <div class="sc-metric"><div class="sc-metric-lbl">Ср. чек с кофемашиной</div><div class="sc-metric-val">${fmoney(mt.avgMachine)}</div></div>
       </div>
     </div>`;
   });
@@ -1392,8 +1511,10 @@ function viewSellers(){
   html+=`<div class="section-label" style="margin-top:8px">⚔ Сравнение продавцов</div>
     <div class="compare-sel"><span style="font-size:11px;color:var(--text-dim)">Кто:</span>`;
   sellers.forEach(s=>{
-    const cls=s.id===pointsState.cmpA?' sel-a':(s.id===pointsState.cmpB?' sel-b':'');
-    html+=`<button class="compare-chip${cls}" onclick="pickCompare('${s.id}')">${s.name}</button>`;
+    const sel=(s.id===pointsState.cmpA||s.id===pointsState.cmpB);
+    const sc=sellerColor(s.id,room.id);
+    const st=sel?`background:${sc.solid};color:#fff;border-color:${sc.solid};font-weight:600;`:'';
+    html+=`<button class="compare-chip" style="${st}" onclick="pickCompare('${s.id}')">${s.name}</button>`;
   });
   html+=`</div>`;
   html+=tugOfWar(pointsState.cmpA,pointsState.cmpB,m);
@@ -1415,22 +1536,24 @@ function tugOfWar(idA,idB,monthKey){
   if(!idA||!idB) return `<div class="tug-section"><div style="color:var(--text-dim);font-size:12px;text-align:center">Выберите двух продавцов для сравнения</div></div>`;
   const a=DB.sellers.find(s=>s.id===idA), b=DB.sellers.find(s=>s.id===idB);
   if(!a||!b) return '';
+  const roomId=pointsState.showroomId;
+  const ca=sellerColor(idA,roomId), cb=sellerColor(idB,roomId);
   const ma=sellerMetrics(idA,monthKey), mb=sellerMetrics(idB,monthKey);
 
   const rows=[
-    { label:'Общий оборот',   va:ma.total,      vb:mb.total,      fmt:fmoney },
-    { label:'Оборот кофе',    va:ma.coffeeRub,  vb:mb.coffeeRub,  fmt:fmoney },
-    { label:'Кофемашины',     va:ma.machines,   vb:mb.machines,   fmt:v=>v+' шт' },
-    { label:'Средний чек',    va:ma.avg,        vb:mb.avg,        fmt:fmoney },
-    { label:'Заказов',        va:ma.orders,     vb:mb.orders,     fmt:v=>v+'' },
+    { label:'Общий оборот',              va:ma.total,      vb:mb.total,      fmt:fmoney },
+    { label:'Оборот кофе',               va:ma.coffeeRub,  vb:mb.coffeeRub,  fmt:fmoney },
+    { label:'Кофемашины',                va:ma.machines,   vb:mb.machines,   fmt:v=>v+' шт' },
+    { label:'Средний чек с кофемашиной', va:ma.avgMachine, vb:mb.avgMachine, fmt:fmoney },
+    { label:'Заказов',                   va:ma.orders,     vb:mb.orders,     fmt:v=>v+'' },
   ];
 
   let html=`<div class="tug-section">
     <div class="tug-header">
-      <div class="tug-player"><div class="tug-avatar tug-a">${initials(a.name)}</div>
+      <div class="tug-player"><div class="tug-avatar" style="background:${ca.grad}">${initials(a.name)}</div>
         <div><div class="tug-player-name">${a.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
       <div class="tug-vs">VS</div>
-      <div class="tug-player right"><div class="tug-avatar tug-b">${initials(b.name)}</div>
+      <div class="tug-player right"><div class="tug-avatar" style="background:${cb.grad}">${initials(b.name)}</div>
         <div><div class="tug-player-name">${b.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
     </div>`;
 
@@ -1442,15 +1565,15 @@ function tugOfWar(idA,idB,monthKey){
     html+=`<div class="tug-row">
       <div class="tug-label">${r.label}</div>
       <div class="tug-bar-wrap">
-        <div class="tug-val a">${r.fmt(r.va)}</div>
+        <div class="tug-val" style="color:${ca.solid};text-align:right">${r.fmt(r.va)}</div>
         <div class="tug-bar">
-          <div class="tug-fill-a" style="width:${pa}%"></div>
-          <div class="tug-fill-b" style="width:${pb}%"></div>
+          <div class="tug-fill-a" style="width:${pa}%;background:${ca.grad}"></div>
+          <div class="tug-fill-b" style="width:${pb}%;background:${cb.grad}"></div>
           <div class="tug-center"></div>
           ${pa>=14?`<span class="tug-pct left">${Math.round(pa)}%</span>`:''}
           ${pb>=14?`<span class="tug-pct right">${Math.round(pb)}%</span>`:''}
         </div>
-        <div class="tug-val b">${r.fmt(r.vb)}</div>
+        <div class="tug-val" style="color:${cb.solid};text-align:left">${r.fmt(r.vb)}</div>
       </div>
       ${win&&sum>0?`<div class="tug-winner">👑 ${win} впереди</div>`:''}
     </div>`;
@@ -1476,9 +1599,10 @@ function viewSellerCard(){
   const cur=sellerMetrics(s.id,curMonth());
   const monthly=sellerMonthly(s.id);
 
+  const scv=sellerColor(s.id,s.showroomId);
   let html=`<button class="back-link" onclick="backToSellers()">← ${room?room.name:'Назад'}</button>
     <div style="display:flex;gap:14px;align-items:center;margin-bottom:6px">
-      <div class="seller-avatar" style="width:54px;height:54px;font-size:19px">${initials(s.name)}</div>
+      <div class="seller-avatar" style="width:54px;height:54px;font-size:19px;background:${scv.grad}">${initials(s.name)}</div>
       <div><div class="page-title" style="margin-bottom:1px">${s.name}</div>
       <div class="page-sub" style="margin-bottom:0">${room?roomLoc(room.id):'—'} · ${s.role==='admin'?'Администратор':'Продавец'}</div></div>
     </div>`;
@@ -1489,7 +1613,7 @@ function viewSellerCard(){
       <div class="stat-box"><div class="stat-lbl">Оборот</div><div class="stat-val blue">${fmoney(cur.total)}</div></div>
       <div class="stat-box"><div class="stat-lbl">Кофемашины</div><div class="stat-val">${cur.machines} шт</div></div>
       <div class="stat-box"><div class="stat-lbl">Оборот кофе</div><div class="stat-val">${fmoney(cur.coffeeRub)}</div></div>
-      <div class="stat-box"><div class="stat-lbl">Средний чек</div><div class="stat-val">${fmoney(cur.avg)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Ср. чек с кофемашиной</div><div class="stat-val">${fmoney(cur.avgMachine)}</div></div>
       <div class="stat-box"><div class="stat-lbl">Заказов</div><div class="stat-val">${cur.orders}</div></div>
     </div>`;
 
