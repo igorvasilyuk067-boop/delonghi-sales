@@ -492,6 +492,33 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .scale-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);}
 .scale-crown{font-size:12px;}
 
+
+/* ── ГОРИЗОНТАЛЬНАЯ ПРОКРУТКА ТАБЛИЦ (мобильные) ── */
+.table-scroll{
+  position:relative;overflow-x:auto;-webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;scrollbar-color:var(--blue-l) var(--surface3);
+}
+.table-scroll::-webkit-scrollbar{height:8px;}
+.table-scroll::-webkit-scrollbar-track{background:var(--surface3);}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--blue-l);border-radius:4px;}
+.table-scroll::-webkit-scrollbar-thumb:hover{background:var(--blue);}
+.table-scroll-wrap{position:relative;}
+.table-scroll-wrap::after{
+  content:'';position:absolute;top:0;right:0;bottom:8px;width:26px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.92));
+  pointer-events:none;opacity:0;transition:opacity .2s;
+}
+.table-scroll-wrap.has-more::after{opacity:1;}
+.table-scroll-hint{
+  display:none;align-items:center;justify-content:center;gap:5px;
+  font-size:10px;color:var(--text-dim);padding:6px 0 2px;
+  background:var(--surface2);border-top:1px solid var(--border);
+}
+.table-scroll-hint svg{width:11px;height:11px;}
+@media(max-width:760px){
+  .table-scroll-hint.on{display:flex;}
+}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;font-size:12px;font-weight:500;border-radius:10px;transition:transform .3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
 #toast.show{transform:translateX(-50%) translateY(0);}
@@ -645,7 +672,15 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="page-sub" id="log-sub"></div>
       <div class="month-tabs" id="month-tabs"></div>
       <div class="cat-tabs" id="cat-tabs"></div>
-      <div class="card" style="padding:0;overflow:hidden;"><div id="log-content"></div></div>
+      <div class="card" style="padding:0;">
+        <div class="table-scroll-wrap" id="log-scroll-wrap">
+          <div class="table-scroll" id="log-scroll"><div id="log-content"></div></div>
+        </div>
+        <div class="table-scroll-hint" id="log-scroll-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+          Смахните таблицу вправо, чтобы увидеть больше
+        </div>
+      </div>
     </div>
 
     <!-- ADMIN — только админы -->
@@ -1191,7 +1226,7 @@ function renderLogTable(){
   if(logCat!=='all')sales=sales.filter(s=>s.items.some(i=>i.cat===logCat));
   sales.sort((a,b)=>b.date.localeCompare(a.date));
   const el=document.getElementById('log-content');
-  if(!sales.length){el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Нет данных</div></div>';return;}
+  if(!sales.length){el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Нет данных</div></div>';updateTableScrollHint();return;}
   el.innerHTML=`<table class="log-table"><thead><tr><th>Дата</th><th>Заказ</th>${isAdmin?'<th>Шоурум</th><th>Продавец</th>':''}<th>Позиции</th><th>Сумма</th><th></th></tr></thead><tbody>${sales.map(sale=>{
     const room=DB.showrooms.find(r=>r.id===sale.showroomId);const seller=DB.sellers.find(s=>s.id===sale.sellerId);
     const items=logCat==='all'?sale.items:sale.items.filter(i=>i.cat===logCat);
@@ -1199,6 +1234,7 @@ function renderLogTable(){
     const canEdit=canEditSale(sale);
     return`<tr><td class="mono">${fdate(sale.date)}</td><td><span class="order-tag">${sale.orderNum||'—'}</span></td>${isAdmin?`<td>${room?.name||'—'}</td><td>${seller?.name||'—'}</td>`:''}<td>${itemsStr}</td><td class="mono">${fmoney(sale.total)}</td><td>${canEdit?`<button class="btn-edit-sale" onclick="openEditModal('${sale.id}')">✏ Изменить</button>`:''}</td></tr>`;
   }).join('')}</tbody></table>`;
+  updateTableScrollHint();
 }
 
 // ══════════════════════════════════
@@ -1874,6 +1910,29 @@ function showTabSkeleton(name){
   if(first) first.innerHTML=skeletonFor(name);
   targets.slice(1).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
 }
+
+
+// ══════════════════════════════════
+//  ГОРИЗОНТАЛЬНАЯ ПРОКРУТКА: подсказка при переполнении
+// ══════════════════════════════════
+function updateTableScrollHint(){
+  const wrap=document.getElementById('log-scroll-wrap');
+  const scroll=document.getElementById('log-scroll');
+  const hint=document.getElementById('log-scroll-hint');
+  if(!wrap||!scroll||!hint)return;
+  const overflowing=scroll.scrollWidth>scroll.clientWidth+2;
+  hint.classList.toggle('on',overflowing);
+  wrap.classList.toggle('has-more',overflowing);
+  if(overflowing&&!scroll.dataset.scrollBound){
+    scroll.dataset.scrollBound='1';
+    scroll.addEventListener('scroll',()=>{
+      const atEnd=scroll.scrollLeft+scroll.clientWidth>=scroll.scrollWidth-4;
+      wrap.classList.toggle('has-more',!atEnd);
+      if(scroll.scrollLeft>8) hint.classList.remove('on');
+    });
+  }
+}
+window.addEventListener('resize',()=>{ if(document.getElementById('log-scroll')) updateTableScrollHint(); });
 
 let toastTimer;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
