@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light">
+<title>De'Longhi — Учёт продаж</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* FORCE LIGHT MODE regardless of device */
+:root{
+  color-scheme: light only;
+  --blue:#1A6FD4;--blue-l:#4A90E2;--blue-d:#0D4FA0;--blue-dim:#E8F0FB;
+  --teal:#0E9F8E;--teal-l:#E6F7F5;
+  --bg:#F0F4FF;--surface:#FFFFFF;--surface2:#F5F8FF;--surface3:#EBF0FC;
+  --border:#D8E2F8;--border-m:#C2D1F0;
+  --text:#1A2340;--text-mid:#4A5670;--text-dim:#8896B0;
+  --gold:#B8860B;--gold-l:#F0C040;--gold-bg:#FFF8E6;
+  --red:#D63E3E;--red-bg:#FFF0F0;
+  --green:#1A9E6A;--green-bg:#E8F9F3;
+  --purple:#7B4FD8;--orange:#D4620A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:#F0F4FF !important;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg) !important;
+  color:var(--text) !important;
+  min-height:100vh;
+  font-size:14px;
+  -webkit-text-size-adjust:100%;
+}
+
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ── LOGIN ── */
+#screen-login{
+  align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#E8F0FB 0%,#F0F4FF 50%,#E4EEF9 100%) !important;
+  position:relative;overflow:hidden;
+}
+#screen-login::before{
+  content:'';position:absolute;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(26,111,212,.08)0%,transparent 70%);
+  top:30%;left:60%;transform:translate(-50%,-50%);pointer-events:none;
+}
+#screen-login::after{
+  content:'';position:absolute;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(14,159,142,.06)0%,transparent 70%);
+  bottom:10%;left:10%;pointer-events:none;
+}
+.login-box{
+  width:100%;max-width:360px;padding:44px 36px 36px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:0 8px 40px rgba(26,111,212,.1);
+  position:relative;z-index:1;
+}
+.login-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:700;
+  background:linear-gradient(135deg,var(--blue-d),var(--blue-l));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:.04em;margin-bottom:4px;
+}
+.login-sub{font-size:11px;color:var(--text-dim);letter-spacing:.14em;text-transform:uppercase;margin-bottom:28px;}
+
+.pin-display{display:flex;gap:14px;justify-content:center;margin-bottom:24px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border-m);background:transparent;transition:all .15s;}
+.pin-dot.filled{background:var(--blue);border-color:var(--blue);}
+
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.pin-key{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:'DM Mono',monospace;font-size:19px;
+  padding:14px;text-align:center;cursor:pointer;
+  transition:all .12s;user-select:none;
+  box-shadow:0 1px 3px rgba(26,111,212,.06);
+}
+.pin-key:hover{background:var(--blue-dim);border-color:var(--blue-l);}
+.pin-key:active{background:var(--blue);color:#fff;transform:scale(.95);}
+.pin-key.del{font-size:15px;color:var(--text-dim);}
+.pin-key.empty{visibility:hidden;}
+.login-error{color:var(--red);font-size:12px;text-align:center;min-height:18px;}
+
+/* ── APP ── */
+#screen-app{flex-direction:column;}
+.topbar{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:0 20px;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(26,111,212,.07);
+}
+.topbar-logo{
+  font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;
+  background:linear-gradient(135deg,var(--blue-d),var(--blue-l));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:.04em;white-space:nowrap;
+}
+.topbar-nav{display:flex;gap:2px;flex-wrap:wrap;}
+.nav-btn{
+  padding:5px 11px;border-radius:8px;font-size:11px;font-weight:500;
+  letter-spacing:.03em;cursor:pointer;border:none;
+  background:transparent;color:var(--text-dim);
+  transition:all .15s;font-family:'Inter',sans-serif;
+}
+.nav-btn:hover{color:var(--text);background:var(--surface2);}
+.nav-btn.active{background:var(--blue-dim);color:var(--blue);font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-pill{
+  background:var(--surface2);border:1px solid var(--border);
+  padding:3px 10px;border-radius:20px;font-size:11px;color:var(--text-mid);
+  white-space:nowrap;
+}
+.role-badge{
+  font-size:10px;padding:2px 8px;border-radius:8px;
+  background:var(--blue-dim);color:var(--blue);font-weight:600;
+}
+.logout-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;line-height:1;transition:color .15s;}
+.logout-btn:hover{color:var(--red);}
+
+.main{flex:1;padding:24px 20px;max-width:980px;margin:0 auto;width:100%;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+/* ── TYPOGRAPHY ── */
+.page-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.page-sub{font-size:12px;color:var(--text-dim);margin-bottom:22px;}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:11px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 6px rgba(26,111,212,.05);}
+
+/* ── FORMS ── */
+.form-row{display:grid;gap:12px;margin-bottom:12px;}
+.form-row.c2{grid-template-columns:1fr 1fr;}
+.form-row.c3{grid-template-columns:1fr 1fr 1fr;}
+.form-row.c4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
+.fc{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 11px;color:var(--text);
+  font-family:'Inter',sans-serif;font-size:13px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+  width:100%;appearance:none;
+}
+.fc:focus{border-color:var(--blue-l);box-shadow:0 0 0 3px rgba(26,111,212,.1);}
+.fc:disabled{opacity:.5;cursor:not-allowed;background:var(--surface3);}
+select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238896B0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;font-family:'Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none;border-radius:8px;transition:all .15s;}
+.btn-primary{background:linear-gradient(135deg,var(--blue-d),var(--blue));color:#fff;box-shadow:0 2px 8px rgba(26,111,212,.25);}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(26,111,212,.35);transform:translateY(-1px);}
+.btn-outline{background:#fff;border:1px solid var(--border-m);color:var(--text-mid);}
+.btn-outline:hover{border-color:var(--blue-l);color:var(--blue);background:var(--blue-dim);}
+.btn-danger{background:#fff;border:1px solid var(--red);color:var(--red);font-size:10px;padding:5px 11px;}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn-sm{padding:7px 14px;font-size:10px;}
+.btn-xs{padding:4px 9px;font-size:10px;}
+.btn-icon{width:30px;height:30px;padding:0;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;}
+.btn-icon:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.btn-full{width:100%;}
+
+/* ── ITEMS ── */
+.items-hdr{display:grid;grid-template-columns:2fr 1.2fr 65px 90px 30px;gap:7px;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.items-hdr span{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);}
+.item-row{display:grid;grid-template-columns:2fr 1.2fr 65px 90px 30px;gap:7px;margin-bottom:7px;align-items:center;}
+.item-total{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding-top:10px;border-top:1px solid var(--border);margin-top:8px;}
+.item-total-lbl{font-size:12px;color:var(--text-dim);}
+.item-total-val{font-family:'DM Mono',monospace;font-size:18px;color:var(--blue);font-weight:500;}
+.add-item-btn{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px dashed var(--border-m);color:var(--text-dim);padding:9px 14px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;width:100%;transition:all .15s;margin-top:10px;border-radius:8px;}
+.add-item-btn:hover{border-color:var(--blue-l);color:var(--blue);background:var(--blue-dim);}
+
+/* ── ORDER NUM ── */
+.order-num-wrap{background:var(--blue-dim);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.order-num-label{font-size:11px;font-weight:600;color:var(--blue);white-space:nowrap;}
+.order-num-input{flex:1;background:#fff;border:1px solid var(--border-m);border-radius:6px;padding:8px 12px;font-family:'DM Mono',monospace;font-size:14px;color:var(--text);outline:none;}
+.order-num-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,111,212,.1);}
+
+/* ── STATS ── */
+.stat-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.stat-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 16px;flex:1;min-width:120px;box-shadow:0 1px 4px rgba(26,111,212,.05);}
+.stat-lbl{font-size:10px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;}
+.stat-val{font-family:'DM Mono',monospace;font-size:18px;color:var(--text);}
+.stat-val.blue{color:var(--blue);}
+.stat-val.green{color:var(--green);}
+.stat-val.red{color:var(--red);}
+
+/* ── SHOWROOM BLOCKS ── */
+.showroom-block{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.showroom-hdr{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.showroom-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--text);}
+.showroom-city{font-size:10px;color:var(--text-dim);margin-top:1px;}
+.showroom-total{font-family:'DM Mono',monospace;font-size:14px;color:var(--blue);font-weight:500;}
+.showroom-body{padding:10px 16px;}
+.seller-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);}
+.seller-row:last-child{border-bottom:none;}
+.reported-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;}
+.not-reported-dot{width:8px;height:8px;border-radius:50%;background:var(--border-m);display:inline-block;margin-right:6px;}
+
+/* ── PLAN BAR ── */
+.plan-bar-wrap{margin-top:9px;}
+.plan-bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:3px;}
+.plan-bar-bg{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+.plan-bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.pbar-over{background:var(--green);}
+.pbar-mid{background:var(--blue);}
+.pbar-low{background:var(--red);}
+
+/* ── COPY BTN ── */
+.copy-btn{display:flex;align-items:center;gap:8px;background:var(--blue-dim);border:1px solid var(--border-m);color:var(--blue);padding:10px 16px;cursor:pointer;font-size:11px;font-family:'Inter',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:all .15s;border-radius:8px;margin-bottom:18px;}
+.copy-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* ── ANALYTICS ── */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.an-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;overflow:hidden;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.an-card-title{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);margin-bottom:12px;}
+.rank-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);position:relative;}
+.rank-row:last-child{border-bottom:none;}
+.rank-row.leader{background:linear-gradient(90deg,rgba(184,134,11,.06),transparent);margin:0 -16px;padding:6px 16px;}
+.rank-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-dim);width:18px;flex-shrink:0;font-weight:500;}
+.rank-name{font-size:12px;color:var(--text);flex:1;min-width:0;font-weight:500;}
+.rank-sub{font-size:10px;color:var(--text-dim);}
+.rank-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);white-space:nowrap;font-weight:500;}
+.rank-bar-bg{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:2px;}
+.rank-bar-fill{height:100%;border-radius:2px;}
+.crown{font-size:13px;margin-left:4px;}
+
+.plan-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.plan-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(26,111,212,.05);}
+.plan-card.leader-card{border-color:rgba(184,134,11,.4);background:var(--gold-bg);}
+.plan-card-name{font-size:13px;color:var(--text);margin-bottom:1px;font-weight:600;}
+.plan-card-city{font-size:10px;color:var(--text-dim);margin-bottom:8px;}
+.plan-card-pct{font-family:'DM Mono',monospace;font-size:22px;font-weight:600;margin-bottom:5px;}
+.plan-card-detail{font-size:10px;color:var(--text-dim);}
+.leader-badge{position:absolute;top:10px;right:10px;font-size:10px;background:var(--gold-bg);color:var(--gold);padding:2px 8px;border-radius:8px;font-weight:700;border:1px solid rgba(184,134,11,.2);}
+
+/* ── LOG ── */
+.log-table{width:100%;border-collapse:collapse;}
+.log-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);border-bottom:1px solid var(--border);}
+.log-table td{padding:9px 10px;font-size:12px;color:var(--text-mid);border-bottom:1px solid var(--border);}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table td.mono{font-family:'DM Mono',monospace;color:var(--text);font-size:12px;}
+.log-table tr:hover td{background:var(--surface2);}
+.badge{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;}
+.b-dl{background:rgba(184,134,11,.12);color:var(--gold);}
+.b-kw{background:rgba(26,158,106,.12);color:var(--green);}
+.b-br{background:rgba(74,144,226,.12);color:var(--blue);}
+.b-nb{background:rgba(212,98,10,.12);color:var(--orange);}
+.b-ac{background:rgba(123,79,216,.12);color:var(--purple);}
+.b-cf{background:rgba(140,80,30,.12);color:#8B5020;}
+.order-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--blue);background:var(--blue-dim);padding:2px 7px;border-radius:5px;font-weight:500;}
+
+/* ── SALARY ── */
+.salary-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.salary-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.salary-row:last-child{border-bottom:none;}
+.salary-lbl{font-size:12px;color:var(--text-mid);}
+.salary-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:500;}
+.salary-total{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:linear-gradient(135deg,var(--blue-dim),#EBF4FF);border-radius:10px;margin-top:6px;}
+.salary-total-lbl{font-size:14px;font-weight:600;color:var(--text);}
+.salary-total-val{font-family:'DM Mono',monospace;font-size:24px;color:var(--blue);font-weight:600;}
+
+/* ── COFFEE ── */
+.coffee-metric{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 4px rgba(26,111,212,.04);}
+.coffee-pct{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;}
+.coffee-pct.ok{color:var(--green);}
+.coffee-pct.low{color:var(--red);}
+
+/* ── ADMIN ── */
+.admin-section{margin-bottom:26px;}
+.admin-grid{display:grid;gap:7px;}
+.admin-item{background:#fff;border:1px solid var(--border);border-radius:8px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.admin-item-name{font-size:13px;color:var(--text);font-weight:500;}
+.admin-item-meta{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.admin-actions{display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.pin-show{font-family:'DM Mono',monospace;font-size:13px;color:var(--blue);letter-spacing:.12em;background:var(--blue-dim);padding:3px 8px;border-radius:5px;}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.tree-region{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:7px;overflow:hidden;}
+.tree-region-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--surface2);}
+.tree-region-name{font-size:13px;font-weight:600;color:var(--text);}
+.tree-region-body{padding:6px 13px 10px;}
+.tree-city{margin-top:6px;}
+.tree-city-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+.tree-city-name{font-size:12px;color:var(--text-mid);font-weight:500;}
+.tree-showroom{display:flex;align-items:center;justify-content:space-between;padding:4px 0 4px 12px;border-left:2px solid var(--border);}
+.tree-showroom-name{font-size:12px;color:var(--text-dim);}
+
+/* ── NAV ── */
+.date-nav{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.date-disp{font-family:'DM Mono',monospace;font-size:13px;color:var(--text);background:#fff;border:1px solid var(--border);padding:7px 14px;border-radius:8px;}
+.month-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
+.month-tab{padding:5px 12px;font-size:11px;font-weight:500;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-dim);font-family:'Inter',sans-serif;transition:all .15s;}
+.month-tab:hover{color:var(--text);border-color:var(--border-m);}
+.month-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.cat-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
+.cat-tab{padding:4px 10px;font-size:11px;font-weight:500;border-radius:7px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-dim);font-family:'Inter',sans-serif;transition:all .15s;}
+.cat-tab:hover{color:var(--text);}
+.cat-tab.active{background:var(--surface3);color:var(--text);border-color:var(--border-m);font-weight:600;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-dim);}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+.empty-text{font-size:13px;}
+
+
+/* ── EDIT MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,35,64,.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 48px rgba(26,35,64,.2);}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--text-dim);margin-bottom:18px;}
+.modal-footer{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+.btn-delete-sale{background:#fff;border:1px solid var(--red);color:var(--red);font-size:11px;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:all .15s;}
+.btn-delete-sale:hover{background:var(--red);color:#fff;}
+.log-actions{display:flex;gap:6px;align-items:center;}
+.btn-edit-sale{background:var(--blue-dim);border:1px solid var(--border-m);color:var(--blue);font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;white-space:nowrap;}
+.btn-edit-sale:hover{background:var(--blue);color:#fff;}
+
+
+/* ── SHOWROOM / SELLER CARDS ── */
+.sr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:20px;}
+.sr-tile{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(26,111,212,.05);}
+.sr-tile:hover{border-color:var(--blue-l);box-shadow:0 4px 14px rgba(26,111,212,.14);transform:translateY(-2px);}
+.sr-tile-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.sr-tile-loc{font-size:10px;color:var(--text-dim);margin-bottom:10px;}
+.sr-tile-stat{font-family:'DM Mono',monospace;font-size:16px;color:var(--blue);font-weight:500;}
+.sr-tile-sub{font-size:10px;color:var(--text-dim);margin-top:2px;}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;padding:6px 0;margin-bottom:12px;}
+.back-link:hover{text-decoration:underline;}
+
+.seller-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .15s;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.seller-card:hover{border-color:var(--blue-l);box-shadow:0 4px 16px rgba(26,111,212,.14);}
+.seller-card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.seller-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--blue-d),var(--blue-l));color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;font-family:'Inter',sans-serif;flex-shrink:0;}
+.seller-card-name{font-size:15px;font-weight:600;color:var(--text);}
+.seller-card-role{font-size:10px;color:var(--text-dim);margin-top:1px;}
+.sc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sc-metric{background:var(--surface2);border-radius:8px;padding:10px 12px;}
+.sc-metric-lbl{font-size:9px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+.sc-metric-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--text);font-weight:500;}
+
+/* ── TUG OF WAR ── */
+.tug-section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.tug-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.tug-player{display:flex;align-items:center;gap:8px;}
+.tug-player.right{flex-direction:row-reverse;text-align:right;}
+.tug-player-name{font-size:13px;font-weight:600;color:var(--text);}
+.tug-player-sub{font-size:10px;color:var(--text-dim);}
+.tug-vs{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text-dim);}
+.tug-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;}
+.tug-a{background:linear-gradient(135deg,#1A6FD4,#4A90E2);}
+.tug-b{background:linear-gradient(135deg,#0E9F8E,#12C4AF);}
+
+.tug-row{margin-bottom:18px;}
+.tug-row:last-child{margin-bottom:0;}
+.tug-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);text-align:center;margin-bottom:7px;}
+.tug-bar-wrap{display:flex;align-items:center;gap:10px;}
+.tug-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap;min-width:78px;}
+.tug-val.a{color:#1A6FD4;text-align:right;}
+.tug-val.b{color:#0E9F8E;text-align:left;}
+.tug-bar{flex:1;height:22px;background:var(--surface3);border-radius:11px;overflow:hidden;display:flex;position:relative;}
+.tug-fill-a{background:linear-gradient(90deg,#1A6FD4,#4A90E2);height:100%;transition:width .6s ease;}
+.tug-fill-b{background:linear-gradient(90deg,#12C4AF,#0E9F8E);height:100%;transition:width .6s ease;}
+.tug-center{position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(26,35,64,.18);transform:translateX(-50%);z-index:2;}
+.tug-pct{position:absolute;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;color:#fff;z-index:3;}
+.tug-pct.left{left:8px;}
+.tug-pct.right{right:8px;}
+.tug-winner{font-size:10px;color:var(--green);font-weight:600;text-align:center;margin-top:5px;}
+
+/* ── MINI TREND CHART ── */
+.trend-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.trend-bars{display:flex;align-items:flex-end;gap:6px;height:130px;padding:0 4px;margin-bottom:8px;}
+.trend-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px;min-width:0;}
+.trend-bar{width:100%;background:linear-gradient(180deg,#4A90E2,#1A6FD4);border-radius:4px 4px 0 0;min-height:3px;transition:height .5s;position:relative;}
+.trend-bar:hover{opacity:.85;}
+.trend-val{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);white-space:nowrap;}
+.trend-labels{display:flex;gap:6px;padding:0 4px;}
+.trend-label{flex:1;font-size:9px;color:var(--text-dim);text-align:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── COMPARE SELECTOR ── */
+.compare-sel{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.compare-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.compare-chip:hover{border-color:var(--blue-l);}
+.compare-chip.sel-a{background:#1A6FD4;color:#fff;border-color:#1A6FD4;}
+.compare-chip.sel-b{background:#0E9F8E;color:#fff;border-color:#0E9F8E;}
+
+
+.seller-admin-row{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:7px;}
+.sa-top{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.sa-edit{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.sa-edit.open{display:block;}
+.sa-inactive{opacity:.55;}
+.chip-archived{background:#F0F0F0;color:#8896B0;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;}
+.btn-mini{background:var(--blue-dim);border:1px solid var(--border-m);color:var(--blue);font-size:10px;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;white-space:nowrap;}
+.btn-mini:hover{background:var(--blue);color:#fff;}
+.btn-mini.warn{color:#B8860B;border-color:#E8D08A;background:#FFF8E6;}
+.btn-mini.warn:hover{background:#B8860B;color:#fff;}
+
+
+.room-access{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.room-chk{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:6px 11px;font-size:11px;cursor:pointer;transition:all .15s;user-select:none;}
+.room-chk:hover{border-color:var(--blue-l);}
+.room-chk.on{background:var(--blue-dim);border-color:var(--blue);color:var(--blue);font-weight:600;}
+.room-chk.home{background:#E8F9F3;border-color:var(--green);color:var(--green);font-weight:600;cursor:default;}
+.room-chk input{display:none;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;font-size:12px;font-weight:500;border-radius:10px;transition:transform .3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── ALERT CHIPS ── */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;font-size:11px;font-weight:600;}
+.chip-green{background:var(--green-bg);color:var(--green);}
+.chip-red{background:var(--red-bg);color:var(--red);}
+.chip-blue{background:var(--blue-dim);color:var(--blue);}
+
+@media(max-width:640px){
+  .main{padding:14px 12px;}
+  .topbar{padding:0 12px;height:auto;flex-wrap:wrap;padding-top:8px;padding-bottom:8px;gap:6px;}
+  .topbar-nav{gap:2px;}
+  .form-row.c2,.form-row.c3,.form-row.c4{grid-template-columns:1fr;}
+  .items-hdr,.item-row{grid-template-columns:1.5fr 1fr 52px 78px 28px;}
+  .analytics-grid{grid-template-columns:1fr;}
+  .nav-btn{padding:4px 8px;font-size:10px;}
+  .login-box{margin:16px;padding:36px 24px 28px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">De'Longhi</div>
+    <div class="login-sub">Учёт продаж · Введите PIN</div>
+    <div class="pin-display">
+      <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="pinKey('1')">1</div><div class="pin-key" onclick="pinKey('2')">2</div><div class="pin-key" onclick="pinKey('3')">3</div>
+      <div class="pin-key" onclick="pinKey('4')">4</div><div class="pin-key" onclick="pinKey('5')">5</div><div class="pin-key" onclick="pinKey('6')">6</div>
+      <div class="pin-key" onclick="pinKey('7')">7</div><div class="pin-key" onclick="pinKey('8')">8</div><div class="pin-key" onclick="pinKey('9')">9</div>
+      <div class="pin-key empty"></div><div class="pin-key" onclick="pinKey('0')">0</div><div class="pin-key del" onclick="pinDel()">⌫</div>
+    </div>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="screen-app" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">De'Longhi</div>
+    <div class="topbar-nav">
+      <button class="nav-btn active" onclick="showTab('sales',this)">Продажи</button>
+      <button class="nav-btn" id="nav-report" onclick="showTab('report',this)">Отчёт дня</button>
+      <button class="nav-btn" id="nav-analytics" onclick="showTab('analytics',this)">Аналитика</button>
+      <button class="nav-btn" id="nav-points" onclick="showTab('points',this)">Точки</button>
+      <button class="nav-btn" id="nav-coffee" onclick="showTab('coffee',this)">Кофе</button>
+      <button class="nav-btn" id="nav-log" onclick="showTab('log',this)">История</button>
+      <button class="nav-btn" id="nav-admin" onclick="showTab('admin',this)" style="display:none">Админ</button>
+    </div>
+    <div class="topbar-right">
+      <span class="role-badge" id="topbar-role" style="display:none">Админ</span>
+      <span class="user-pill" id="topbar-user">—</span>
+      <button class="logout-btn" onclick="doLogout()" title="Выйти">⏻</button>
+    </div>
+  </div>
+  <div class="main">
+
+    <!-- SALES -->
+    <div class="tab-panel active" id="tab-sales">
+      <div class="page-title">Внесение продаж</div>
+      <div class="page-sub" id="sales-sub"></div>
+      <div class="card">
+        <div class="section-label">Продавец и точка</div>
+        <div class="form-row c2">
+          <div class="fg"><label class="fl">Шоурум</label>
+            <input class="fc" id="disp-showroom" disabled>
+            <select class="fc" id="sale-room" style="display:none"></select>
+          </div>
+          <div class="fg"><label class="fl">Продавец</label><input class="fc" id="disp-seller" disabled></div>
+        </div>
+      </div>
+      <div class="order-num-wrap" style="flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;">
+          <span class="order-num-label">№ Заказа Bitrix24</span>
+          <input class="order-num-input" id="order-number" placeholder="Напр. ORD-12345" style="flex:1;">
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="order-num-label">Дата продажи</span>
+          <input type="date" class="order-num-input" id="sale-date" style="width:150px;font-family:'Inter',sans-serif;font-size:13px;">
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Позиции заказа</div>
+        <div class="items-hdr"><span>Наименование</span><span>Категория</span><span>Кол-во</span><span>Сумма, ₽</span><span></span></div>
+        <div id="items-container"></div>
+        <button class="add-item-btn" onclick="addItem()">＋ Добавить позицию</button>
+        <div class="item-total"><span class="item-total-lbl">Итого по заказу:</span><span class="item-total-val" id="receipt-total">0 ₽</span></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="clearItems()">Очистить</button>
+        <button class="btn btn-primary btn-full" onclick="saveSale()">Сохранить продажу</button>
+      </div>
+    </div>
+
+    <!-- REPORT — все видят -->
+    <div class="tab-panel" id="tab-report">
+      <div class="page-title">Отчёт дня</div>
+      <div class="page-sub">Сводка по всем точкам — виден всем</div>
+      <div class="date-nav">
+        <button class="btn btn-outline btn-sm" onclick="reportDateShift(-1)">◂</button>
+        <div class="date-disp" id="report-date-disp"></div>
+        <button class="btn btn-outline btn-sm" onclick="reportDateShift(1)">▸</button>
+      </div>
+      <div class="stat-row" id="report-stats"></div>
+      <button class="copy-btn" onclick="copyReport()">⎘ Скопировать отчёт для чата</button>
+      <div id="report-showrooms"></div>
+    </div>
+
+    <!-- ANALYTICS — все видят -->
+    <div class="tab-panel" id="tab-analytics">
+      <div class="page-title">Аналитика</div>
+      <div class="page-sub">Рейтинги и показатели — видны всей команде</div>
+      <div class="month-tabs" id="an-month-tabs"></div>
+      <div class="analytics-grid" id="analytics-grid"></div>
+      <div id="analytics-plans"></div>
+    </div>
+
+    <!-- POINTS / SELLER CARDS -->
+    <div class="tab-panel" id="tab-points">
+      <div id="points-view"></div>
+    </div>
+
+    <!-- COFFEE — все видят -->
+    <div class="tab-panel" id="tab-coffee">
+      <div class="page-title">Контроль кофе</div>
+      <div class="page-sub">Соотношение кофемашин к кофе — план 100%</div>
+      <div class="month-tabs" id="coffee-month-tabs"></div>
+      <div id="coffee-content"></div>
+    </div>
+
+    <!-- LOG — своя история; админ видит всё -->
+    <div class="tab-panel" id="tab-log">
+      <div class="page-title">История продаж</div>
+      <div class="page-sub" id="log-sub"></div>
+      <div class="month-tabs" id="month-tabs"></div>
+      <div class="cat-tabs" id="cat-tabs"></div>
+      <div class="card" style="padding:0;overflow:hidden;"><div id="log-content"></div></div>
+    </div>
+
+    <!-- ADMIN — только админы -->
+    <div class="tab-panel" id="tab-admin">
+      <div class="page-title">Администрирование</div>
+      <div class="page-sub">Полный доступ</div>
+      <div class="admin-section">
+        <div class="section-label">Структура: Регион → Город → Шоурум</div>
+        <div id="admin-tree"></div>
+        <div class="card" style="padding:16px;margin-top:10px;">
+          <div class="section-label" style="margin-bottom:10px;">Добавить</div>
+          <div class="form-row c3" style="margin-bottom:10px;">
+            <div class="fg"><label class="fl">Регион</label><input class="fc" id="new-region" placeholder="Санкт-Петербург"></div>
+            <div class="fg"><label class="fl" style="visibility:hidden">x</label><button class="btn btn-outline btn-sm" style="margin-top:auto" onclick="addRegion()">+ Регион</button></div>
+          </div>
+          <div class="form-row c3" style="margin-bottom:10px;">
+            <div class="fg"><label class="fl">Город</label><input class="fc" id="new-city" placeholder="Санкт-Петербург"></div>
+            <div class="fg"><label class="fl">Регион</label><select class="fc" id="new-city-region"></select></div>
+            <div class="fg"><label class="fl" style="visibility:hidden">x</label><button class="btn btn-outline btn-sm" style="margin-top:auto" onclick="addCity()">+ Город</button></div>
+          </div>
+          <div class="form-row c3">
+            <div class="fg"><label class="fl">Шоурум</label><input class="fc" id="new-showroom" placeholder="Мега-Парнас"></div>
+            <div class="fg"><label class="fl">Город</label><select class="fc" id="new-showroom-city"></select></div>
+            <div class="fg"><label class="fl" style="visibility:hidden">x</label><button class="btn btn-outline btn-sm" style="margin-top:auto" onclick="addShowroom()">+ Шоурум</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="admin-section">
+        <div class="section-label">Продавцы и PIN-коды</div>
+        <div class="admin-grid" id="admin-sellers"></div>
+        <div class="divider"></div>
+        <div class="form-row c4" style="margin-bottom:8px;">
+          <div class="fg"><label class="fl">Фамилия Имя</label><input class="fc" id="new-seller-name" placeholder="Иванов Пётр"></div>
+          <div class="fg"><label class="fl">Шоурум</label><select class="fc" id="new-seller-showroom"></select></div>
+          <div class="fg"><label class="fl">Роль</label><select class="fc" id="new-seller-role"><option value="seller">Продавец</option><option value="admin">Администратор</option></select></div>
+          <div class="fg"><label class="fl">PIN (4 цифры)</label><input class="fc" id="new-seller-pin" placeholder="3456" maxlength="4"></div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="addSeller()">+ Добавить продавца</button>
+      </div>
+      <div class="admin-section">
+        <div class="section-label">Планы продаж (₽ в месяц)</div>
+        <div class="form-row c2" style="margin-bottom:12px;">
+          <div class="fg"><label class="fl">Месяц</label><select class="fc" id="plan-month-sel" onchange="renderPlanInputs()"></select></div>
+        </div>
+        <div id="plan-inputs"></div>
+      </div>
+      <div class="admin-section">
+        <div class="section-label">Экспорт данных</div>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 Скачать CSV</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal">
+    <div class="modal-title">Редактировать продажу</div>
+    <div class="modal-sub" id="edit-modal-sub"></div>
+    <input type="hidden" id="edit-sale-id">
+    <div class="form-row c2" style="margin-bottom:12px;">
+      <div class="fg"><label class="fl">Дата</label><input type="date" class="fc" id="edit-sale-date"></div>
+      <div class="fg"><label class="fl">№ Заказа</label><input class="fc" id="edit-order-num" placeholder="ORD-12345"></div>
+    </div>
+    <div class="section-label" style="margin-bottom:8px;">Позиции</div>
+    <div class="items-hdr"><span>Наименование</span><span>Категория</span><span>Кол-во</span><span>Сумма, ₽</span><span></span></div>
+    <div id="edit-items-container"></div>
+    <button class="add-item-btn" onclick="addEditItem()" style="margin-bottom:12px;">＋ Добавить позицию</button>
+    <div class="item-total"><span class="item-total-lbl">Итого:</span><span class="item-total-val" id="edit-receipt-total">0 ₽</span></div>
+    <div class="modal-footer">
+      <button class="btn-delete-sale" onclick="deleteSaleFromModal()">Удалить продажу</button>
+      <button class="btn btn-outline btn-sm" onclick="closeEditModal()">Отмена</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════
+const CATS=[
+  {id:'dl',label:"De'Longhi",badge:'b-dl',color:'#B8860B'},
+  {id:'kw',label:'Kenwood',badge:'b-kw',color:'#1A9E6A'},
+  {id:'br',label:'Braun',badge:'b-br',color:'#1A6FD4'},
+  {id:'nb',label:'NutriBullet',badge:'b-nb',color:'#D4620A'},
+  {id:'ac',label:'Аксессуары',badge:'b-ac',color:'#7B4FD8'},
+  {id:'cf',label:'Кофе',badge:'b-cf',color:'#8B5020'},
+];
+const MACHINE_CATS=['dl'];
+const MRU=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+// ══════════════════════════════════
+//  DATA — Google Sheets backend
+// ══════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbyJMsZ3Jmrltha3Wl2XzHLybDasR2o7PNg0ZU4V9miGvWBeYWf-qIWFgFdlDCla8T_b/exec';
+
+// Локальный кэш — используется только для мгновенного рендера между сетевыми запросами.
+// Источник истины — таблица Google Sheets, не браузер.
+function loadDB(){
+  return window.__dbCache || {
+    regions:[], cities:[], showrooms:[], sellers:[], sales:[], plans:{}
+  };
+}
+function saveDB(d){
+  window.__dbCache = d;
+}
+
+// Тянет свежие данные с сервера (Google Sheets через Apps Script)
+async function fetchDB(){
+  try{
+    const res = await fetch(API_URL + '?action=load', { method:'GET' });
+    const data = await res.json();
+    if(data.error){ console.error('API error:', data.error); return loadDB(); }
+    window.__dbCache = data;
+    return data;
+  }catch(err){
+    console.error('Ошибка загрузки данных:', err);
+    toast('Нет связи с сервером — проверьте интернет');
+    return loadDB();
+  }
+}
+
+// Отправляет одно действие на сервер (не блокирует интерфейс)
+async function apiCall(action, payload){
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
+      body: JSON.stringify({ action, ...payload })
+    });
+    const data = await res.json();
+    if(data.error){ console.error('API error:', data.error); toast('Ошибка сохранения: '+data.error); return false; }
+    return true;
+  }catch(err){
+    console.error('Ошибка сети:', err);
+    toast('Не удалось сохранить — проверьте интернет');
+    return false;
+  }
+}
+
+let DB=loadDB(),currentUser=null,reportDate,itemCounter=0,logMonth=null,logCat='all';
+
+// ══════════════════════════════════
+//  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ══════════════════════════════════
+function uid(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function fdate(s){const[y,m,d]=s.split('-');return`${d}.${m}.${y}`;}
+function fmoney(n){return Number(n).toLocaleString('ru-RU')+' ₽';}
+function mLabel(m){const[y,mo]=m.split('-');return`${MRU[+mo-1]} ${y}`;}
+function curMonth(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
+function allMonths(){const ms=[...new Set(DB.sales.map(s=>s.date.slice(0,7)))].sort().reverse();if(!ms.includes(curMonth()))ms.unshift(curMonth());return ms;}
+function futurePlanMonths(){const ms=[];for(let y=2024;y<=2040;y++){for(let m=1;m<=12;m++){ms.push(`${y}-${String(m).padStart(2,'0')}`)}}return ms;}
+function roomLoc(rid){const r=DB.showrooms.find(x=>x.id===rid);if(!r)return'';const c=DB.cities.find(x=>x.id===r.cityId);const rg=c?DB.regions.find(x=>x.id===c.regionId):null;return[rg?.name,c?.name,r?.name].filter(Boolean).join(' › ');}
+
+reportDate=todayStr();
+
+// ══════════════════════════════════
+//  PIN
+// ══════════════════════════════════
+let pinBuf='';
+function pinKey(d){if(pinBuf.length>=4)return;pinBuf+=d;upDots();if(pinBuf.length===4)setTimeout(tryLogin,100);}
+function pinDel(){pinBuf=pinBuf.slice(0,-1);upDots();document.getElementById('login-error').textContent='';}
+function upDots(){for(let i=0;i<4;i++)document.getElementById('dot-'+i).classList.toggle('filled',i<pinBuf.length);}
+async function tryLogin(){
+  const enteredPin = pinBuf; pinBuf=''; upDots();
+  document.getElementById('login-error').textContent='Проверка...';
+  DB = await fetchDB();
+  const u=DB.sellers.find(s=>s.pin===enteredPin&&!s.archived);
+  if(u){currentUser=u;document.getElementById('login-error').textContent='';
+    document.getElementById('screen-login').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+    initApp();
+  } else document.getElementById('login-error').textContent='Неверный PIN';
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  showTab('sales',document.querySelector('.nav-btn'));
+}
+
+// ══════════════════════════════════
+//  INIT & PERMISSIONS
+// ══════════════════════════════════
+function initApp(){
+  DB=loadDB();reportDate=todayStr();
+  const isAdmin=currentUser.role==='admin';
+  document.getElementById('topbar-user').textContent=currentUser.name.split(' ').slice(0,2).join(' ');
+  document.getElementById('topbar-role').style.display=isAdmin?'':'none';
+  document.getElementById('nav-admin').style.display=isAdmin?'':'none';
+  // All see: report, analytics, coffee
+  // Own only: salary, log (non-admin sees only own)
+  const myRooms=sellerRooms(currentUser);
+  const dispEl=document.getElementById('disp-showroom');
+  const selEl=document.getElementById('sale-room');
+  if(myRooms.length>1){
+    dispEl.style.display='none';
+    selEl.style.display='';
+    selEl.innerHTML=myRooms.map(rid=>`<option value="${rid}"${rid===currentUser.showroomId?' selected':''}>${roomLoc(rid)}</option>`).join('');
+  } else {
+    dispEl.style.display='';
+    selEl.style.display='none';
+    const room=DB.showrooms.find(r=>r.id===currentUser.showroomId);
+    dispEl.value=room?roomLoc(room.id):'—';
+  }
+  document.getElementById('disp-seller').value=currentUser.name;
+  document.getElementById('sales-sub').textContent=`Сегодня, ${fdate(todayStr())}`;
+  clearItems();renderReport();
+}
+async function showTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  // Обновляем данные с сервера при переходе на вкладки с общими данными
+  if(['report','analytics','points','coffee','log','admin'].includes(name)){
+    await fetchDB(); DB=loadDB();
+  }
+  if(name==='report')renderReport();
+  if(name==='analytics')renderAnalytics();
+  if(name==='points')renderPoints();
+  if(name==='coffee')renderCoffee();
+  if(name==='log')renderLog();
+  if(name==='admin')renderAdmin();
+}
+
+// ══════════════════════════════════
+//  SALES
+// ══════════════════════════════════
+function addItem(){
+  const id=++itemCounter;const el=document.createElement('div');el.className='item-row';el.id='item-row-'+id;
+  el.innerHTML=`<input class="fc" placeholder="Наименование / артикул" id="iname-${id}"><select class="fc" id="icat-${id}">${CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('')}</select><input class="fc" type="number" min="1" value="1" id="iqty-${id}" oninput="upTotal()"><input class="fc" type="number" min="0" placeholder="0" id="iprice-${id}" oninput="upTotal()"><button class="btn-icon" onclick="removeItem(${id})">✕</button>`;
+  document.getElementById('items-container').appendChild(el);upTotal();
+}
+function removeItem(id){document.getElementById('item-row-'+id)?.remove();upTotal();}
+function upTotal(){let t=0;document.querySelectorAll('.item-row').forEach(r=>{const id=r.id.replace('item-row-','');t+=(parseFloat(document.getElementById('iqty-'+id)?.value)||0)*(parseFloat(document.getElementById('iprice-'+id)?.value)||0);});document.getElementById('receipt-total').textContent=fmoney(t);}
+function clearItems(){document.getElementById('items-container').innerHTML='';document.getElementById('order-number').value='';const sd=document.getElementById('sale-date');if(sd)sd.value=todayStr();itemCounter=0;addItem();upTotal();}
+function getItems(){const items=[];document.querySelectorAll('.item-row').forEach(r=>{const id=r.id.replace('item-row-','');const name=(document.getElementById('iname-'+id)?.value||'').trim();const cat=document.getElementById('icat-'+id)?.value;const qty=parseFloat(document.getElementById('iqty-'+id)?.value)||0;const price=parseFloat(document.getElementById('iprice-'+id)?.value)||0;if(name&&price>0)items.push({name,cat,qty,price,total:qty*price});});return items;}
+async function saveSale(){
+  const orderNum=(document.getElementById('order-number').value||'').trim();
+  if(!orderNum){toast('Введите номер заказа из Bitrix24');return;}
+  const items=getItems();if(!items.length){toast('Добавьте хотя бы одну позицию');return;}
+  DB=loadDB();
+  if(DB.sales.find(s=>s.orderNum===orderNum)){if(!confirm(`Заказ ${orderNum} уже есть. Добавить снова?`))return;}
+  const saleDate=(document.getElementById('sale-date')?.value)||todayStr();
+  const total=items.reduce((s,i)=>s+i.total,0);
+  const row={id:uid(),date:saleDate,orderNum,showroomId:activeRoomId(),sellerId:currentUser.id,items,total,createdAt:new Date().toISOString()};
+  DB.sales.push(row); saveDB(DB);
+  toast('Сохраняю...');
+  const ok=await apiCall('addSale',{row});
+  if(ok){toast(`Заказ ${orderNum} сохранён — ${fmoney(total)}`);clearItems();}
+  else{DB.sales=DB.sales.filter(s=>s.id!==row.id);saveDB(DB);}
+}
+
+// ══════════════════════════════════
+//  REPORT (all see)
+// ══════════════════════════════════
+function reportDateShift(d){const dt=new Date(reportDate);dt.setDate(dt.getDate()+d);reportDate=dt.toISOString().slice(0,10);renderReport();}
+function renderReport(){
+  DB=loadDB();document.getElementById('report-date-disp').textContent=fdate(reportDate);
+  const day=DB.sales.filter(s=>s.date===reportDate);
+  const totalRev=day.reduce((s,x)=>s+x.total,0);
+  const mkey=reportDate.slice(0,7);
+  const reportedRooms=[...new Set(day.map(s=>s.showroomId))].length;
+  document.getElementById('report-stats').innerHTML=`
+    <div class="stat-box"><div class="stat-lbl">Выручка дня</div><div class="stat-val blue">${fmoney(totalRev)}</div></div>
+    <div class="stat-box"><div class="stat-lbl">Заказов</div><div class="stat-val">${day.length}</div></div>
+    <div class="stat-box"><div class="stat-lbl">Отчиталось точек</div><div class="stat-val ${reportedRooms===DB.showrooms.length?'green':'red'}">${reportedRooms} / ${DB.showrooms.length}</div></div>`;
+  const cont=document.getElementById('report-showrooms');cont.innerHTML='';
+  if(!day.length){cont.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">За этот день продаж не внесено</div></div>';return;}
+  DB.regions.forEach(region=>{
+    DB.cities.filter(c=>c.regionId===region.id).forEach(city=>{
+      DB.showrooms.filter(r=>r.cityId===city.id).forEach(room=>{
+        const rs=day.filter(s=>s.showroomId===room.id);
+        const rt=rs.reduce((s,x)=>s+x.total,0);
+        const hasReported=rs.length>0;
+        const plan=DB.plans[`${room.id}_${mkey}`]||0;
+        const monthTotal=DB.sales.filter(s=>s.showroomId===room.id&&s.date.startsWith(mkey)).reduce((s,x)=>s+x.total,0);
+        const pct=plan>0?Math.min((monthTotal/plan)*100,100):0;
+        const pctR=plan>0?Math.round((monthTotal/plan)*100):null;
+        const barClass=pct>=100?'pbar-over':pct<50?'pbar-low':'pbar-mid';
+        const selMap={};rs.forEach(sale=>{if(!selMap[sale.sellerId])selMap[sale.sellerId]={total:0,orders:0,items:0};selMap[sale.sellerId].total+=sale.total;selMap[sale.sellerId].orders++;selMap[sale.sellerId].items+=sale.items.length;});
+        const sellHTML=Object.entries(selMap).map(([sid,d])=>{const s=DB.sellers.find(x=>x.id===sid);return`<div class="seller-row"><div style="font-size:13px;color:var(--text);font-weight:500">${s?.name||'—'}</div><div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text)">${fmoney(d.total)}</div><div style="font-size:10px;color:var(--text-dim)">${d.orders} заказ · ${d.items} поз.</div></div></div>`;}).join('');
+        const planBar=plan>0?`<div class="plan-bar-wrap"><div class="plan-bar-lbl"><span>План месяца: ${fmoney(monthTotal)} / ${fmoney(plan)}</span><span style="color:${pct>=100?'var(--green)':pct<50?'var(--red)':'var(--blue)'}">${pctR}%</span></div><div class="plan-bar-bg"><div class="plan-bar-fill ${barClass}" style="width:${pct}%"></div></div></div>`:'';
+        const block=document.createElement('div');block.className='showroom-block';
+        block.innerHTML=`<div class="showroom-hdr"><div><div class="showroom-name">${room.name} ${hasReported?'<span class="chip chip-green" style="font-size:10px;padding:1px 6px">✓ отчиталась</span>':'<span class="chip chip-red" style="font-size:10px;padding:1px 6px">не внесено</span>'}</div><div class="showroom-city">${region.name} › ${city.name}</div></div><div class="showroom-total">${hasReported?fmoney(rt):'—'}</div></div><div class="showroom-body">${sellHTML||'<div style="color:var(--text-dim);font-size:12px;padding:6px 0">Данных нет</div>'}${planBar}</div>`;
+        cont.appendChild(block);
+      });
+    });
+  });
+}
+function buildReportText(){
+  DB=loadDB();const day=DB.sales.filter(s=>s.date===reportDate);const mkey=reportDate.slice(0,7);const[y,mo]=mkey.split('-');
+  let lines=[`📊 Отчёт De'Longhi — ${fdate(reportDate)}`,``];
+  DB.regions.forEach(region=>{DB.cities.filter(c=>c.regionId===region.id).forEach(city=>{DB.showrooms.filter(r=>r.cityId===city.id).forEach(room=>{
+    const rs=day.filter(s=>s.showroomId===room.id);
+    if(!rs.length){lines.push(`🏬 ${room.name} (${city.name}) — не отчиталось`,'');return;}
+    const rt=rs.reduce((s,x)=>s+x.total,0);
+    lines.push(`🏬 ${room.name} (${city.name}) — ${rt.toLocaleString('ru-RU')} ₽`);
+    const selMap={};rs.forEach(sale=>{if(!selMap[sale.sellerId])selMap[sale.sellerId]={total:0,items:0};selMap[sale.sellerId].total+=sale.total;selMap[sale.sellerId].items+=sale.items.length;});
+    Object.entries(selMap).forEach(([sid,d])=>{const s=DB.sellers.find(x=>x.id===sid);lines.push(`   ${s?.name||'—'}: ${d.total.toLocaleString('ru-RU')} ₽ (${d.items} поз.)`);});
+    const plan=DB.plans[`${room.id}_${mkey}`]||0;
+    if(plan>0){const mt=DB.sales.filter(s=>s.showroomId===room.id&&s.date.startsWith(mkey)).reduce((s,x)=>s+x.total,0);lines.push(`   📈 План ${MRU[+mo-1]}: ${Math.round((mt/plan)*100)}% (${mt.toLocaleString('ru-RU')} / ${plan.toLocaleString('ru-RU')} ₽)`);}
+    lines.push('');
+  });});});
+  lines.push(`💰 Итого: ${day.reduce((s,x)=>s+x.total,0).toLocaleString('ru-RU')} ₽`);
+  return lines.join('\n');
+}
+function copyReport(){navigator.clipboard.writeText(buildReportText()).then(()=>toast('Отчёт скопирован!'));}
+
+// ══════════════════════════════════
+//  ANALYTICS (all see)
+// ══════════════════════════════════
+function renderAnalytics(){
+  DB=loadDB();const months=allMonths();const tabsEl=document.getElementById('an-month-tabs');tabsEl.innerHTML='';
+  months.forEach((m,i)=>{const btn=document.createElement('button');btn.className='month-tab'+(i===0?' active':'');btn.textContent=mLabel(m);btn.onclick=()=>{document.querySelectorAll('#an-month-tabs .month-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAnalyticsMonth(m);};tabsEl.appendChild(btn);});
+  if(months.length)renderAnalyticsMonth(months[0]);
+}
+function renderAnalyticsMonth(m){
+  DB=loadDB();const sales=DB.sales.filter(s=>s.date.startsWith(m));
+  const selMap={};
+  sales.forEach(sale=>{if(!selMap[sale.sellerId])selMap[sale.sellerId]={total:0,orders:0,items:0,machines:0,coffee:0,other:0,ck:[]};const sd=selMap[sale.sellerId];sd.total+=sale.total;sd.orders++;sd.ck.push(sale.total);sale.items.forEach(item=>{sd.items+=item.qty;if(MACHINE_CATS.includes(item.cat))sd.machines+=item.qty;if(item.cat==='cf')sd.coffee+=item.qty;if(!MACHINE_CATS.includes(item.cat)&&item.cat!=='cf')sd.other+=item.total;});});
+  const sellers=Object.entries(selMap).map(([id,d])=>({id,...d,avg:d.ck.length?Math.round(d.ck.reduce((a,b)=>a+b,0)/d.ck.length):0}));
+  const N=5;
+  function rankCard(title,arr,valFn,color,suffix=''){
+    const sorted=[...arr].sort((a,b)=>valFn(b)-valFn(a)).filter(x=>valFn(x)>0);
+    const max=sorted[0]?valFn(sorted[0])||1:1;
+    return`<div class="an-card"><div class="an-card-title">${title}</div>${sorted.slice(0,N).map((item,i)=>{const s=DB.sellers.find(x=>x.id===item.id);const val=valFn(item);const pct=Math.round((val/max)*100);const isL=i===0;return`<div class="rank-row${isL?' leader':''}"><div class="rank-num">${i+1}</div><div style="flex:1;min-width:0"><div class="rank-name">${s?.name||'—'}</div><div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${color}"></div></div></div><div class="rank-val" style="margin-right:${isL?'18px':'0'}">${val.toLocaleString('ru-RU')}${suffix}</div>${isL?'<span class="crown" style="font-size:14px;flex-shrink:0">👑</span>':''}</div>`;}).join('')||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет данных</div>'}</div>`;
+  }
+  // Plan cards
+  const planCardsHTML=DB.regions.map(region=>DB.cities.filter(c=>c.regionId===region.id).map(city=>DB.showrooms.filter(r=>r.cityId===city.id).map(room=>{
+    const fact=sales.filter(s=>s.showroomId===room.id).reduce((s,x)=>s+x.total,0);
+    const plan=DB.plans[`${room.id}_${m}`]||0;
+    const pct=plan>0?Math.round((fact/plan)*100):null;
+    const allPcts=DB.showrooms.map(r2=>{const p2=DB.plans[`${r2.id}_${m}`]||0;const f2=sales.filter(s=>s.showroomId===r2.id).reduce((s,x)=>s+x.total,0);return p2>0?Math.round((f2/p2)*100):-1;});
+    const isLeader=pct!==null&&pct===Math.max(...allPcts)&&pct>0;
+    const col=pct>=100?'var(--green)':pct>=70?'var(--blue)':'var(--red)';
+    return`<div class="plan-card${isLeader?' leader-card':''}">
+      ${isLeader?'<div class="leader-badge">👑 Лидер</div>':''}
+      <div class="plan-card-name">${room.name}</div>
+      <div class="plan-card-city">${region.name} › ${city.name}</div>
+      <div class="plan-card-pct" style="color:${col}">${pct!==null?pct+'%':'—'}</div>
+      <div class="plan-bar-bg" style="margin-bottom:6px"><div class="plan-bar-fill" style="width:${Math.min(pct||0,100)}%;background:${col}"></div></div>
+      <div class="plan-card-detail">${fmoney(fact)}${plan?' / '+fmoney(plan):' · план не задан'}</div>
+    </div>`;
+  }).join('')).join('')).join('');
+
+  document.getElementById('analytics-grid').innerHTML=
+    rankCard('🏆 Оборот, ₽',sellers,d=>d.total,'#1A6FD4',' ₽')+
+    rankCard('☕ Кофемашины',sellers,d=>d.machines,'#D4620A',' шт')+
+    rankCard('🫘 Кофе',sellers,d=>d.coffee,'#8B5020',' пач')+
+    rankCard('📦 Другие позиции',sellers,d=>Math.round(d.other),'#7B4FD8',' ₽')+
+    rankCard('🧾 Средний чек',sellers,d=>d.avg,'#0E9F8E',' ₽')+
+    `<div class="an-card"><div class="an-card-title">📋 Заказов за месяц</div>${[...sellers].sort((a,b)=>b.orders-a.orders).slice(0,N).map((item,i)=>{const s=DB.sellers.find(x=>x.id===item.id);return`<div class="rank-row${i===0?' leader':''}"><div class="rank-num">${i+1}</div><div class="rank-name" style="flex:1">${s?.name||'—'}</div><div class="rank-val" style="margin-right:${i===0?'18px':'0'}">${item.orders}</div>${i===0?'<span class="crown" style="font-size:14px;flex-shrink:0">👑</span>':''}</div>`;}).join('')||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет данных</div>'}</div>`;
+
+  document.getElementById('analytics-plans').innerHTML=`<div class="section-label" style="margin:4px 0 12px">🎯 Выполнение плана по точкам</div><div class="plan-progress-grid">${planCardsHTML||'<div style="color:var(--text-dim);font-size:13px">Нет данных</div>'}</div>`;
+}
+
+// ══════════════════════════════════
+//  COFFEE (all see)
+// ══════════════════════════════════
+function renderCoffee(){
+  DB=loadDB();const months=allMonths();const tabsEl=document.getElementById('coffee-month-tabs');tabsEl.innerHTML='';
+  months.forEach((m,i)=>{const btn=document.createElement('button');btn.className='month-tab'+(i===0?' active':'');btn.textContent=mLabel(m);btn.onclick=()=>{document.querySelectorAll('#coffee-month-tabs .month-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderCoffeeMonth(m);};tabsEl.appendChild(btn);});
+  if(months.length)renderCoffeeMonth(months[0]);
+}
+function renderCoffeeMonth(m){
+  DB=loadDB();const sales=DB.sales.filter(s=>s.date.startsWith(m));
+  const cont=document.getElementById('coffee-content');cont.innerHTML='';
+  let totalM=0,totalC=0;
+  DB.regions.forEach(region=>{DB.cities.filter(c=>c.regionId===region.id).forEach(city=>{DB.showrooms.filter(r=>r.cityId===city.id).forEach(room=>{
+    const rs=sales.filter(s=>s.showroomId===room.id);let m2=0,c2=0;
+    rs.forEach(sale=>sale.items.forEach(item=>{if(MACHINE_CATS.includes(item.cat))m2+=item.qty;if(item.cat==='cf')c2+=item.qty;}));
+    totalM+=m2;totalC+=c2;if(!m2&&!c2)return;
+    const pct=m2>0?Math.round((c2/m2)*100):null;const ok=pct!==null&&pct>=100;
+    const block=document.createElement('div');block.className='coffee-metric';
+    block.innerHTML=`<div class="coffee-metric-hdr"><div><div style="font-size:13px;color:var(--text);font-weight:600">${room.name}</div><div style="font-size:10px;color:var(--text-dim)">${region.name} › ${city.name}</div></div><div style="text-align:right"><div class="coffee-pct ${ok?'ok':'low'}">${pct!==null?pct+'%':'—'}</div><div style="font-size:10px;color:var(--text-dim);margin-top:2px">${c2} пачек / ${m2} машин</div></div></div>${m2>0?`<div class="plan-bar-bg"><div class="plan-bar-fill ${ok?'pbar-over':'pbar-low'}" style="width:${Math.min(pct||0,100)}%"></div></div>`:''}`;
+    cont.appendChild(block);
+  });});});
+  if(totalM||totalC){
+    const pct=totalM>0?Math.round((totalC/totalM)*100):null;
+    const sumDiv=document.createElement('div');sumDiv.className='stat-row';sumDiv.style.marginTop='16px';
+    sumDiv.innerHTML=`<div class="stat-box"><div class="stat-lbl">Кофемашин всего</div><div class="stat-val">${totalM} шт.</div></div><div class="stat-box"><div class="stat-lbl">Кофе всего</div><div class="stat-val">${totalC} пачек</div></div><div class="stat-box"><div class="stat-lbl">Выполнение</div><div class="stat-val ${pct>=100?'green':'red'}">${pct!==null?pct+'%':'—'}</div></div><div class="stat-box"><div class="stat-lbl">Бонус за кофе</div><div class="stat-val ${pct>=100?'green':'red'}">${pct>=100?'5 000 ₽ ✓':'Не заработан'}</div></div>`;
+    cont.appendChild(sumDiv);
+  }
+  if(!cont.children.length)cont.innerHTML='<div class="empty"><div class="empty-icon">☕</div><div class="empty-text">Нет данных</div></div>';
+}
+
+// ══════════════════════════════════
+//  LOG
+// ══════════════════════════════════
+function renderLog(){
+  DB=loadDB();const isAdmin=currentUser.role==='admin';
+  document.getElementById('log-sub').textContent=isAdmin?'Все продажи по всем точкам':'Ваши продажи · другие не видят';
+  const allSales=isAdmin?DB.sales:DB.sales.filter(s=>s.sellerId===currentUser.id);
+  const months=[...new Set(allSales.map(s=>s.date.slice(0,7)))].sort().reverse();
+  if(!logMonth||!months.includes(logMonth))logMonth=months[0]||null;
+  const tabsEl=document.getElementById('month-tabs');tabsEl.innerHTML='';
+  months.forEach(m=>{const btn=document.createElement('button');btn.className='month-tab'+(m===logMonth?' active':'');btn.textContent=mLabel(m);btn.onclick=()=>{logMonth=m;document.querySelectorAll('#month-tabs .month-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLogTable();};tabsEl.appendChild(btn);});
+  const catEl=document.getElementById('cat-tabs');catEl.innerHTML='';
+  [{id:'all',label:'Все'},...CATS].forEach(c=>{const btn=document.createElement('button');btn.className='cat-tab'+(c.id===logCat?' active':'');btn.textContent=c.label;btn.onclick=()=>{logCat=c.id;document.querySelectorAll('#cat-tabs .cat-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderLogTable();};catEl.appendChild(btn);});
+  renderLogTable();
+}
+function renderLogTable(){
+  DB=loadDB();const isAdmin=currentUser.role==='admin';
+  let sales=isAdmin?DB.sales:DB.sales.filter(s=>s.sellerId===currentUser.id);
+  if(logMonth)sales=sales.filter(s=>s.date.startsWith(logMonth));
+  if(logCat!=='all')sales=sales.filter(s=>s.items.some(i=>i.cat===logCat));
+  sales.sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('log-content');
+  if(!sales.length){el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Нет данных</div></div>';return;}
+  el.innerHTML=`<table class="log-table"><thead><tr><th>Дата</th><th>Заказ</th>${isAdmin?'<th>Шоурум</th><th>Продавец</th>':''}<th>Позиции</th><th>Сумма</th><th></th></tr></thead><tbody>${sales.map(sale=>{
+    const room=DB.showrooms.find(r=>r.id===sale.showroomId);const seller=DB.sellers.find(s=>s.id===sale.sellerId);
+    const items=logCat==='all'?sale.items:sale.items.filter(i=>i.cat===logCat);
+    const itemsStr=items.map(i=>{const c=CATS.find(x=>x.id===i.cat);return`<span class="badge ${c?.badge||''}">${c?.label||i.cat}</span> ${i.name} ×${i.qty}`;}).join('<br>');
+    const canEdit=canEditSale(sale);
+    return`<tr><td class="mono">${fdate(sale.date)}</td><td><span class="order-tag">${sale.orderNum||'—'}</span></td>${isAdmin?`<td>${room?.name||'—'}</td><td>${seller?.name||'—'}</td>`:''}<td>${itemsStr}</td><td class="mono">${fmoney(sale.total)}</td><td>${canEdit?`<button class="btn-edit-sale" onclick="openEditModal('${sale.id}')">✏ Изменить</button>`:''}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+// ══════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════
+function renderAdmin(){
+  DB=loadDB();renderTree();renderAdminSellers();renderPlanMonthSel();renderPlanInputs();
+  const sel=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html;};
+  sel('new-city-region',DB.regions.map(r=>`<option value="${r.id}">${r.name}</option>`).join(''));
+  sel('new-showroom-city',DB.cities.map(c=>{const r=DB.regions.find(x=>x.id===c.regionId);return`<option value="${c.id}">${r?r.name+' › ':''} ${c.name}</option>`;}).join(''));
+  sel('new-seller-showroom',DB.showrooms.map(r=>`<option value="${r.id}">${roomLoc(r.id)}</option>`).join(''));
+}
+function renderTree(){
+  const el=document.getElementById('admin-tree');el.innerHTML='';
+  DB.regions.forEach(region=>{
+    const cities=DB.cities.filter(c=>c.regionId===region.id);
+    const div=document.createElement('div');div.className='tree-region';
+    let body='';cities.forEach(city=>{const rooms=DB.showrooms.filter(r=>r.cityId===city.id);body+=`<div class="tree-city"><div class="tree-city-hdr"><div class="tree-city-name">🏙 ${city.name}</div><button class="btn-danger btn-xs" onclick="deleteCity('${city.id}')">Удалить</button></div>${rooms.map(r=>`<div class="tree-showroom"><div class="tree-showroom-name">🏬 ${r.name}</div><button class="btn-danger btn-xs" onclick="deleteShowroom('${r.id}')">Удалить</button></div>`).join('')}</div>`;});
+    div.innerHTML=`<div class="tree-region-hdr"><div class="tree-region-name">📍 ${region.name}</div><button class="btn-danger btn-xs" onclick="deleteRegion('${region.id}')">Удалить</button></div><div class="tree-region-body">${body||'<div style="color:var(--text-dim);font-size:12px;padding:8px 0">Нет городов</div>'}</div>`;
+    el.appendChild(div);
+  });
+  if(!DB.regions.length)el.innerHTML='<div style="color:var(--text-dim);font-size:13px;margin-bottom:10px">Нет регионов</div>';
+}
+async function addRegion(){const name=document.getElementById('new-region').value.trim();if(!name){toast('Введите название');return;}DB=loadDB();const row={id:uid(),name};DB.regions.push(row);saveDB(DB);document.getElementById('new-region').value='';renderAdmin();await apiCall('addStructure',{row:{type:'region',id:row.id,name:row.name,parentId:''}});toast('Регион добавлен');}
+async function addCity(){const name=document.getElementById('new-city').value.trim();const regionId=document.getElementById('new-city-region').value;if(!name||!regionId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,regionId};DB.cities.push(row);saveDB(DB);document.getElementById('new-city').value='';renderAdmin();await apiCall('addStructure',{row:{type:'city',id:row.id,name:row.name,parentId:row.regionId}});toast('Город добавлен');}
+async function addShowroom(){const name=document.getElementById('new-showroom').value.trim();const cityId=document.getElementById('new-showroom-city').value;if(!name||!cityId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,cityId};DB.showrooms.push(row);saveDB(DB);document.getElementById('new-showroom').value='';renderAdmin();await apiCall('addStructure',{row:{type:'showroom',id:row.id,name:row.name,parentId:row.cityId}});toast('Шоурум добавлен');}
+async function deleteRegion(id){if(DB.cities.some(c=>c.regionId===id)){toast('Сначала удалите города');return;}if(!confirm('Удалить регион?'))return;DB=loadDB();DB.regions=DB.regions.filter(r=>r.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
+async function deleteCity(id){if(DB.showrooms.some(r=>r.cityId===id)){toast('Сначала удалите шоурумы');return;}if(!confirm('Удалить город?'))return;DB=loadDB();DB.cities=DB.cities.filter(c=>c.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
+async function deleteShowroom(id){if(!confirm('Удалить шоурум?'))return;DB=loadDB();DB.showrooms=DB.showrooms.filter(r=>r.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
+function renderAdminSellers(){
+  const el=document.getElementById('admin-sellers');
+  if(!DB.sellers.length){el.innerHTML='<div style="color:var(--text-dim);font-size:13px">Нет продавцов</div>';return;}
+  const active=DB.sellers.filter(s=>!s.archived);
+  const arch=DB.sellers.filter(s=>s.archived);
+  const roomOpts=(sel)=>DB.showrooms.map(r=>`<option value="${r.id}"${r.id===sel?' selected':''}>${roomLoc(r.id)}</option>`).join('');
+  const render=(s)=>`<div class="seller-admin-row${s.archived?' sa-inactive':''}" id="sa-${s.id}">
+    <div class="sa-top">
+      <div>
+        <div class="admin-item-name">${s.name} ${s.archived?'<span class="chip-archived">В архиве</span>':''}</div>
+        <div class="admin-item-meta">${DB.showrooms.find(r=>r.id===s.showroomId)?roomLoc(s.showroomId):'— точка удалена'} · ${s.role==='admin'?'Администратор':'Продавец'}${(Array.isArray(s.extraRooms)&&s.extraRooms.length)?` · +${s.extraRooms.length} доп. точк${s.extraRooms.length===1?'а':'и'}`:''}</div>
+      </div>
+      <div class="admin-actions">
+        ${s.archived?'':`<span class="pin-show">PIN: ${s.pin}</span>`}
+        <button class="btn-mini" onclick="toggleSellerEdit('${s.id}')">Изменить</button>
+      </div>
+    </div>
+    <div class="sa-edit" id="sae-${s.id}">
+      <div class="form-row c2" style="margin-bottom:10px">
+        <div class="fg"><label class="fl">Фамилия Имя</label><input class="fc" id="ed-name-${s.id}" value="${s.name.replace(/"/g,'&quot;')}"></div>
+        <div class="fg"><label class="fl">PIN (4 цифры)</label><input class="fc" id="ed-pin-${s.id}" value="${s.pin}" maxlength="4"></div>
+      </div>
+      <div class="form-row c2" style="margin-bottom:10px">
+        <div class="fg"><label class="fl">Шоурум (перевод на другую точку)</label><select class="fc" id="ed-room-${s.id}">${roomOpts(s.showroomId)}</select></div>
+        <div class="fg"><label class="fl">Роль</label><select class="fc" id="ed-role-${s.id}"><option value="seller"${s.role==='seller'?' selected':''}>Продавец</option><option value="admin"${s.role==='admin'?' selected':''}>Администратор</option></select></div>
+      </div>
+      ${s.role!=='admin'?`<div class="fg" style="margin-bottom:12px">
+        <label class="fl">Доступ к другим точкам (подмены, отпуска)</label>
+        <div class="room-access">${DB.showrooms.map(r=>{
+          const isHome=r.id===s.showroomId;
+          const on=Array.isArray(s.extraRooms)&&s.extraRooms.includes(r.id);
+          return isHome
+            ? `<span class="room-chk home">🏠 ${r.name} · основная</span>`
+            : `<label class="room-chk${on?' on':''}" onclick="this.classList.toggle('on')"><input type="checkbox" id="ed-xr-${s.id}-${r.id}"${on?' checked':''} onclick="event.stopPropagation();this.closest('label').classList.toggle('on',this.checked)">${r.name}</label>`;
+        }).join('')}</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:5px">Отмеченные точки появятся у продавца в выпадающем списке при внесении продажи</div>
+      </div>`:''}
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary btn-xs" onclick="saveSellerEdit('${s.id}')">Сохранить</button>
+        <button class="btn btn-outline btn-xs" onclick="toggleSellerEdit('${s.id}')">Отмена</button>
+        ${s.archived
+          ? `<button class="btn-mini" onclick="unarchiveSeller('${s.id}')">Вернуть из архива</button>`
+          : `<button class="btn-mini warn" onclick="archiveSeller('${s.id}')">В архив (уволен)</button>`}
+        <button class="btn-danger" onclick="deleteSeller('${s.id}')" style="margin-left:auto">Удалить навсегда</button>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:9px;line-height:1.5">
+        Архив — продавец не сможет войти, но все его продажи и статистика сохранятся.<br>
+        Удалить навсегда — продажи останутся в базе, но без привязки к имени.
+      </div>
+    </div>
+  </div>`;
+  let html=active.map(render).join('');
+  if(arch.length) html+=`<div class="section-label" style="margin-top:16px;color:var(--text-dim)">Архив (${arch.length})</div>`+arch.map(render).join('');
+  el.innerHTML=html;
+}
+
+function toggleSellerEdit(id){
+  const el=document.getElementById('sae-'+id);
+  if(el) el.classList.toggle('open');
+}
+
+async function saveSellerEdit(id){
+  const name=document.getElementById('ed-name-'+id).value.trim();
+  const pin=document.getElementById('ed-pin-'+id).value.trim();
+  const showroomId=document.getElementById('ed-room-'+id).value;
+  const role=document.getElementById('ed-role-'+id).value;
+  if(!name){toast('Введите имя');return;}
+  if(!/^\d{4}$/.test(pin)){toast('PIN — 4 цифры');return;}
+  DB=loadDB();
+  if(DB.sellers.find(s=>s.pin===pin&&s.id!==id)){toast('PIN уже занят');return;}
+  const i=DB.sellers.findIndex(s=>s.id===id);
+  if(i===-1){toast('Не найден');return;}
+  const wasRoom=DB.sellers[i].showroomId;
+  const extraRooms=[];
+  DB.showrooms.forEach(r=>{
+    if(r.id===showroomId) return;
+    const cb=document.getElementById(`ed-xr-${id}-${r.id}`);
+    if(cb&&cb.checked) extraRooms.push(r.id);
+  });
+  DB.sellers[i]={...DB.sellers[i],name,pin,showroomId,role,extraRooms};
+  saveDB(DB);
+  if(currentUser.id===id) currentUser=DB.sellers[i];
+  renderAdmin();
+  await apiCall('updateSeller',{row:DB.sellers[i]});
+  toast(wasRoom!==showroomId?'Продавец переведён на другую точку':'Сохранено');
+}
+
+async function archiveSeller(id){
+  if(id===currentUser.id){toast('Нельзя архивировать себя');return;}
+  if(!confirm('Отправить в архив? Продавец не сможет войти, вся статистика сохранится.'))return;
+  DB=loadDB();
+  const i=DB.sellers.findIndex(s=>s.id===id);
+  if(i>-1){DB.sellers[i].archived=true;saveDB(DB);renderAdmin();await apiCall('updateSeller',{row:DB.sellers[i]});}
+  toast('В архиве');
+}
+
+async function unarchiveSeller(id){
+  DB=loadDB();
+  const i=DB.sellers.findIndex(s=>s.id===id);
+  if(i>-1){
+    if(DB.sellers.find(s=>s.pin===DB.sellers[i].pin&&s.id!==id&&!s.archived)){toast('PIN занят — смените перед возвратом');return;}
+    DB.sellers[i].archived=false;saveDB(DB);renderAdmin();
+    await apiCall('updateSeller',{row:DB.sellers[i]});
+  } else renderAdmin();
+  toast('Возвращён в работу');
+}
+
+async function addSeller(){const name=document.getElementById('new-seller-name').value.trim();const showroomId=document.getElementById('new-seller-showroom').value;const role=document.getElementById('new-seller-role').value;const pin=document.getElementById('new-seller-pin').value.trim();if(!name||!showroomId){toast('Заполните имя и шоурум');return;}if(!/^\d{4}$/.test(pin)){toast('PIN — 4 цифры');return;}DB=loadDB();if(DB.sellers.find(s=>s.pin===pin)){toast('PIN уже занят');return;}const row={id:uid(),name,showroomId,role,pin,archived:false,extraRooms:[]};DB.sellers.push(row);saveDB(DB);document.getElementById('new-seller-name').value='';document.getElementById('new-seller-pin').value='';renderAdmin();await apiCall('addSeller',{row});toast('Продавец добавлен');}
+async function deleteSeller(id){if(id===currentUser.id){toast('Нельзя удалить себя');return;}if(!confirm('Удалить?'))return;DB=loadDB();DB.sellers=DB.sellers.filter(s=>s.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteSeller',{id});toast('Удалён');}
+function renderPlanMonthSel(){const months=futurePlanMonths();const el=document.getElementById('plan-month-sel');el.innerHTML=months.map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');el.value=curMonth();}
+function renderPlanInputs(){DB=loadDB();const m=document.getElementById('plan-month-sel')?.value||curMonth();const el=document.getElementById('plan-inputs');if(!DB.showrooms.length){el.innerHTML='<div style="color:var(--text-dim);font-size:13px">Нет шоурумов</div>';return;}el.innerHTML=`<div class="admin-grid">${DB.showrooms.map(r=>`<div class="admin-item"><div><div class="admin-item-name">${r.name}</div><div class="admin-item-meta">${roomLoc(r.id)}</div></div><div style="display:flex;gap:7px;align-items:center;"><input class="fc" type="number" placeholder="0" value="${DB.plans[r.id+'_'+m]||''}" id="plan_${r.id}" style="width:140px;text-align:right;"><span style="font-size:11px;color:var(--text-dim)">₽</span><button class="btn btn-outline btn-xs" onclick="savePlan('${r.id}')">OK</button></div></div>`).join('')}</div>`;}
+async function savePlan(rid){const m=document.getElementById('plan-month-sel').value;const val=parseFloat(document.getElementById('plan_'+rid)?.value)||0;DB=loadDB();const key=`${rid}_${m}`;DB.plans[key]=val;saveDB(DB);await apiCall('setPlan',{key,value:val});toast('План сохранён');}
+function exportCSV(){
+  DB=loadDB();const rows=[['Дата','№ Заказа','Регион','Город','Шоурум','Продавец','Наименование','Категория','Кол-во','Сумма позиции','Итого заказа']];
+  DB.sales.forEach(sale=>{const room=DB.showrooms.find(r=>r.id===sale.showroomId);const city=room?DB.cities.find(c=>c.id===room.cityId):null;const region=city?DB.regions.find(r=>r.id===city.regionId):null;const seller=DB.sellers.find(s=>s.id===sale.sellerId);sale.items.forEach(item=>{const cat=CATS.find(c=>c.id===item.cat);rows.push([sale.date,sale.orderNum||'',region?.name||'',city?.name||'',room?.name||'',seller?.name||'',item.name,cat?.label||'',item.qty,item.total,sale.total]);});});
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('\uFEFF'+csv);a.download=`delonghi_${todayStr()}.csv`;a.click();toast('CSV скачан');
+}
+
+// ══════════════════════════════════
+//  EDIT / DELETE SALES
+// ══════════════════════════════════
+let editItemCounter = 0;
+
+function canEditSale(sale) {
+  // Admin can edit any sale; seller can only edit own sale on own showroom
+  if (currentUser.role === 'admin') return true;
+  return sale.sellerId === currentUser.id;
+}
+
+function openEditModal(saleId) {
+  DB = loadDB();
+  const sale = DB.sales.find(s => s.id === saleId);
+  if (!sale || !canEditSale(sale)) { toast('Нет доступа к этой продаже'); return; }
+  const seller = DB.sellers.find(s => s.id === sale.sellerId);
+  const room = DB.showrooms.find(r => r.id === sale.showroomId);
+  document.getElementById('edit-modal-sub').textContent = `${seller?.name || '—'} · ${room?.name || '—'}`;
+  document.getElementById('edit-sale-id').value = saleId;
+  document.getElementById('edit-sale-date').value = sale.date;
+  document.getElementById('edit-order-num').value = sale.orderNum || '';
+  // Render items
+  editItemCounter = 0;
+  document.getElementById('edit-items-container').innerHTML = '';
+  sale.items.forEach(item => addEditItem(item));
+  upEditTotal();
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+function addEditItem(item) {
+  const id = ++editItemCounter;
+  const el = document.createElement('div');
+  el.className = 'item-row'; el.id = 'edit-item-row-' + id;
+  el.innerHTML = `<input class="fc" placeholder="Наименование" id="einame-${id}" value="${item ? item.name.replace(/"/g,'&quot;') : ''}">
+    <select class="fc" id="eicat-${id}">${CATS.map(c => `<option value="${c.id}"${item && item.cat === c.id ? ' selected' : ''}>${c.label}</option>`).join('')}</select>
+    <input class="fc" type="number" min="1" value="${item ? item.qty : 1}" id="eiqty-${id}" oninput="upEditTotal()">
+    <input class="fc" type="number" min="0" value="${item ? item.price : ''}" placeholder="0" id="eiprice-${id}" oninput="upEditTotal()">
+    <button class="btn-icon" onclick="removeEditItem(${id})">✕</button>`;
+  document.getElementById('edit-items-container').appendChild(el);
+  upEditTotal();
+}
+
+function removeEditItem(id) {
+  document.getElementById('edit-item-row-' + id)?.remove();
+  upEditTotal();
+}
+
+function upEditTotal() {
+  let t = 0;
+  document.querySelectorAll('#edit-items-container .item-row').forEach(r => {
+    const id = r.id.replace('edit-item-row-', '');
+    t += (parseFloat(document.getElementById('eiqty-' + id)?.value) || 0) *
+         (parseFloat(document.getElementById('eiprice-' + id)?.value) || 0);
+  });
+  document.getElementById('edit-receipt-total').textContent = fmoney(t);
+}
+
+function getEditItems() {
+  const items = [];
+  document.querySelectorAll('#edit-items-container .item-row').forEach(r => {
+    const id = r.id.replace('edit-item-row-', '');
+    const name = (document.getElementById('einame-' + id)?.value || '').trim();
+    const cat = document.getElementById('eicat-' + id)?.value;
+    const qty = parseFloat(document.getElementById('eiqty-' + id)?.value) || 0;
+    const price = parseFloat(document.getElementById('eiprice-' + id)?.value) || 0;
+    if (name && price > 0) items.push({ name, cat, qty, price, total: qty * price });
+  });
+  return items;
+}
+
+async function saveEditModal() {
+  const saleId = document.getElementById('edit-sale-id').value;
+  const date = document.getElementById('edit-sale-date').value;
+  const orderNum = document.getElementById('edit-order-num').value.trim();
+  const items = getEditItems();
+  if (!date) { toast('Укажите дату'); return; }
+  if (!orderNum) { toast('Укажите номер заказа'); return; }
+  if (!items.length) { toast('Добавьте хотя бы одну позицию'); return; }
+  DB = loadDB();
+  const idx = DB.sales.findIndex(s => s.id === saleId);
+  if (idx === -1) { toast('Продажа не найдена'); return; }
+  const updated = { ...DB.sales[idx], date, orderNum, items, total: items.reduce((s, i) => s + i.total, 0) };
+  DB.sales[idx] = updated; saveDB(DB);
+  closeEditModal(); renderLogTable();
+  const ok = await apiCall('updateSale', { row: updated });
+  toast(ok ? 'Продажа обновлена' : 'Не сохранено на сервере — попробуйте ещё раз');
+}
+
+async function deleteSaleFromModal() {
+  const saleId = document.getElementById('edit-sale-id').value;
+  if (!confirm('Удалить эту продажу? Отменить нельзя.')) return;
+  DB = loadDB();
+  DB.sales = DB.sales.filter(s => s.id !== saleId);
+  saveDB(DB);
+  closeEditModal(); renderLogTable();
+  const ok = await apiCall('deleteSale', { id: saleId });
+  toast(ok ? 'Продажа удалена' : 'Не сохранено на сервере — обновите страницу');
+}
+
+
+
+// ══════════════════════════════════
+//  ДОСТУП К ТОЧКАМ
+// ══════════════════════════════════
+// Список точек, на которых продавец может работать
+function sellerRooms(s){
+  if(!s) return [];
+  if(s.role==='admin') return DB.showrooms.map(r=>r.id);
+  const extra=Array.isArray(s.extraRooms)?s.extraRooms:[];
+  return [...new Set([s.showroomId,...extra])].filter(id=>DB.showrooms.some(r=>r.id===id));
+}
+// Может ли текущий пользователь смотреть точку
+function canViewRoom(roomId){
+  if(currentUser.role==='admin') return true;
+  return sellerRooms(currentUser).includes(roomId);
+}
+// Активная точка для внесения продажи
+function activeRoomId(){
+  const sel=document.getElementById('sale-room');
+  if(sel&&sel.value) return sel.value;
+  return currentUser.showroomId;
+}
+
+// ══════════════════════════════════
+//  ТОЧКИ / КАРТОЧКИ ПРОДАВЦОВ
+// ══════════════════════════════════
+let pointsState = { view:'showrooms', showroomId:null, sellerId:null, month:'all', cmpA:null, cmpB:null };
+
+function initials(name){
+  const p=(name||'').trim().split(/\s+/);
+  return ((p[0]||'')[0]||'').toUpperCase()+((p[1]||'')[0]||'').toUpperCase();
+}
+
+// Собирает метрики продавца за период
+function sellerMetrics(sellerId, monthKey){
+  let sales=DB.sales.filter(s=>s.sellerId===sellerId);
+  if(monthKey && monthKey!=='all') sales=sales.filter(s=>s.date.startsWith(monthKey));
+  let total=0,coffeeRub=0,machines=0,coffeeQty=0,otherRub=0;
+  const cks=[];
+  sales.forEach(sale=>{
+    total+=sale.total; cks.push(sale.total);
+    sale.items.forEach(it=>{
+      if(it.cat==='cf'){ coffeeRub+=it.total; coffeeQty+=it.qty; }
+      else if(MACHINE_CATS.includes(it.cat)){ machines+=it.qty; }
+      else { otherRub+=it.total; }
+    });
+  });
+  return {
+    total, coffeeRub, coffeeQty, machines, otherRub,
+    orders: sales.length,
+    avg: cks.length?Math.round(cks.reduce((a,b)=>a+b,0)/cks.length):0
+  };
+}
+
+// Помесячная динамика продавца
+function sellerMonthly(sellerId){
+  const map={};
+  DB.sales.filter(s=>s.sellerId===sellerId).forEach(s=>{
+    const m=s.date.slice(0,7);
+    if(!map[m]) map[m]={total:0,coffeeRub:0,machines:0,orders:0};
+    map[m].total+=s.total; map[m].orders++;
+    s.items.forEach(it=>{
+      if(it.cat==='cf') map[m].coffeeRub+=it.total;
+      if(MACHINE_CATS.includes(it.cat)) map[m].machines+=it.qty;
+    });
+  });
+  return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+
+function renderPoints(){
+  DB=loadDB();
+  const v=document.getElementById('points-view');
+  // Продавец с одной точкой попадает сразу внутрь
+  if(pointsState.view==='showrooms'&&currentUser.role!=='admin'){
+    const my=sellerRooms(currentUser);
+    if(my.length===1){ pointsState.view='sellers'; pointsState.showroomId=my[0]; }
+  }
+  if(pointsState.view==='showrooms') v.innerHTML=viewShowrooms();
+  else if(pointsState.view==='sellers') v.innerHTML=viewSellers();
+  else if(pointsState.view==='card') v.innerHTML=viewSellerCard();
+}
+
+// ── СПИСОК ТОЧЕК ──
+function viewShowrooms(){
+  const m=curMonth();
+  const isAdm=currentUser.role==='admin';
+  let html=`<div class="page-title">Точки продаж</div><div class="page-sub">${isAdm?'Все точки сети — выберите шоурум':'Ваша точка — карточки коллег и сравнение'}</div>`;
+  let tiles='';
+  DB.regions.forEach(rg=>{
+    DB.cities.filter(ci=>ci.regionId===rg.id).forEach(ci=>{
+      DB.showrooms.filter(r=>r.cityId===ci.id&&canViewRoom(r.id)).forEach(room=>{
+        const monthSales=DB.sales.filter(s=>s.showroomId===room.id&&s.date.startsWith(m));
+        const total=monthSales.reduce((a,b)=>a+b.total,0);
+        const cnt=DB.sellers.filter(s=>s.showroomId===room.id&&!s.archived).length;
+        tiles+=`<div class="sr-tile" onclick="openShowroom('${room.id}')">
+          <div class="sr-tile-name">${room.name}</div>
+          <div class="sr-tile-loc">${rg.name} › ${ci.name}</div>
+          <div class="sr-tile-stat">${fmoney(total)}</div>
+          <div class="sr-tile-sub">${mLabel(m)} · ${cnt} продавц.</div>
+        </div>`;
+      });
+    });
+  });
+  html+=`<div class="sr-grid">${tiles||'<div style="color:var(--text-dim);font-size:13px">Нет точек</div>'}</div>`;
+  return html;
+}
+
+function openShowroom(id){ if(!canViewRoom(id)){toast('Нет доступа к этой точке');return;} pointsState.view='sellers'; pointsState.showroomId=id; pointsState.cmpA=null; pointsState.cmpB=null; renderPoints(); }
+function backToShowrooms(){ pointsState.view='showrooms'; renderPoints(); }
+function backToSellers(){ pointsState.view='sellers'; renderPoints(); }
+
+// ── ПРОДАВЦЫ ТОЧКИ + СРАВНЕНИЕ ──
+function viewSellers(){
+  const room=DB.showrooms.find(r=>r.id===pointsState.showroomId);
+  if(!room||!canViewRoom(room.id)){ pointsState.view='showrooms'; return viewShowrooms(); }
+  // Продавцы точки: закреплённые + те, у кого есть доступ (подмены)
+  const sellers=DB.sellers.filter(s=>!s.archived&&sellerRooms(s).includes(room.id)&&s.role!=='admin')
+    .concat(DB.sellers.filter(s=>!s.archived&&s.role==='admin'&&s.showroomId===room.id));
+  const m=pointsState.month;
+
+  // авто-выбор двух для сравнения
+  if(!pointsState.cmpA&&sellers[0]) pointsState.cmpA=sellers[0].id;
+  if(!pointsState.cmpB&&sellers[1]) pointsState.cmpB=sellers[1].id;
+
+  const multiRooms=currentUser.role==='admin'||sellerRooms(currentUser).length>1;
+  let html=`${multiRooms?'<button class="back-link" onclick="backToShowrooms()">← Все точки</button>':''}
+    <div class="page-title">${room.name}</div>
+    <div class="page-sub">${roomLoc(room.id)}</div>`;
+
+  // месяц-фильтр
+  const months=['all',...allMonths()];
+  html+=`<div class="month-tabs">`+months.map(mm=>
+    `<button class="month-tab${mm===m?' active':''}" onclick="setPointsMonth('${mm}')">${mm==='all'?'Всё время':mLabel(mm)}</button>`
+  ).join('')+`</div>`;
+
+  // карточки продавцов
+  html+=`<div class="sr-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">`;
+  sellers.forEach(s=>{
+    const mt=sellerMetrics(s.id,m);
+    html+=`<div class="seller-card" onclick="openSellerCard('${s.id}')">
+      <div class="seller-card-hdr">
+        <div style="display:flex;gap:11px;align-items:center">
+          <div class="seller-avatar">${initials(s.name)}</div>
+          <div><div class="seller-card-name">${s.name}</div>
+          <div class="seller-card-role">${s.role==='admin'?'Администратор':'Продавец'}</div></div>
+        </div>
+      </div>
+      <div class="sc-metrics">
+        <div class="sc-metric"><div class="sc-metric-lbl">Оборот</div><div class="sc-metric-val">${fmoney(mt.total)}</div></div>
+        <div class="sc-metric"><div class="sc-metric-lbl">Кофемашины</div><div class="sc-metric-val">${mt.machines} шт</div></div>
+        <div class="sc-metric"><div class="sc-metric-lbl">Оборот кофе</div><div class="sc-metric-val">${fmoney(mt.coffeeRub)}</div></div>
+        <div class="sc-metric"><div class="sc-metric-lbl">Средний чек</div><div class="sc-metric-val">${fmoney(mt.avg)}</div></div>
+      </div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  if(sellers.length<2){
+    html+=`<div class="empty" style="padding:28px"><div class="empty-text">Для сравнения нужно минимум два продавца на точке</div></div>`;
+    return html;
+  }
+
+  // выбор кого с кем
+  html+=`<div class="section-label" style="margin-top:8px">⚔ Сравнение продавцов</div>
+    <div class="compare-sel"><span style="font-size:11px;color:var(--text-dim)">Кто:</span>`;
+  sellers.forEach(s=>{
+    const cls=s.id===pointsState.cmpA?' sel-a':(s.id===pointsState.cmpB?' sel-b':'');
+    html+=`<button class="compare-chip${cls}" onclick="pickCompare('${s.id}')">${s.name}</button>`;
+  });
+  html+=`</div>`;
+  html+=tugOfWar(pointsState.cmpA,pointsState.cmpB,m);
+  return html;
+}
+
+function setPointsMonth(m){ pointsState.month=m; renderPoints(); }
+function pickCompare(id){
+  if(pointsState.cmpA===id){ pointsState.cmpA=pointsState.cmpB; pointsState.cmpB=null; }
+  else if(pointsState.cmpB===id){ pointsState.cmpB=null; }
+  else if(!pointsState.cmpA){ pointsState.cmpA=id; }
+  else if(!pointsState.cmpB){ pointsState.cmpB=id; }
+  else { pointsState.cmpB=id; }
+  renderPoints();
+}
+
+// ── ПЕРЕТЯГИВАНИЕ КАНАТА ──
+function tugOfWar(idA,idB,monthKey){
+  if(!idA||!idB) return `<div class="tug-section"><div style="color:var(--text-dim);font-size:12px;text-align:center">Выберите двух продавцов для сравнения</div></div>`;
+  const a=DB.sellers.find(s=>s.id===idA), b=DB.sellers.find(s=>s.id===idB);
+  if(!a||!b) return '';
+  const ma=sellerMetrics(idA,monthKey), mb=sellerMetrics(idB,monthKey);
+
+  const rows=[
+    { label:'Общий оборот',   va:ma.total,      vb:mb.total,      fmt:fmoney },
+    { label:'Оборот кофе',    va:ma.coffeeRub,  vb:mb.coffeeRub,  fmt:fmoney },
+    { label:'Кофемашины',     va:ma.machines,   vb:mb.machines,   fmt:v=>v+' шт' },
+    { label:'Средний чек',    va:ma.avg,        vb:mb.avg,        fmt:fmoney },
+    { label:'Заказов',        va:ma.orders,     vb:mb.orders,     fmt:v=>v+'' },
+  ];
+
+  let html=`<div class="tug-section">
+    <div class="tug-header">
+      <div class="tug-player"><div class="tug-avatar tug-a">${initials(a.name)}</div>
+        <div><div class="tug-player-name">${a.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
+      <div class="tug-vs">VS</div>
+      <div class="tug-player right"><div class="tug-avatar tug-b">${initials(b.name)}</div>
+        <div><div class="tug-player-name">${b.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
+    </div>`;
+
+  rows.forEach(r=>{
+    const sum=r.va+r.vb;
+    const pa=sum>0?(r.va/sum)*100:50;
+    const pb=100-pa;
+    const win=r.va>r.vb?a.name:(r.vb>r.va?b.name:null);
+    html+=`<div class="tug-row">
+      <div class="tug-label">${r.label}</div>
+      <div class="tug-bar-wrap">
+        <div class="tug-val a">${r.fmt(r.va)}</div>
+        <div class="tug-bar">
+          <div class="tug-fill-a" style="width:${pa}%"></div>
+          <div class="tug-fill-b" style="width:${pb}%"></div>
+          <div class="tug-center"></div>
+          ${pa>=14?`<span class="tug-pct left">${Math.round(pa)}%</span>`:''}
+          ${pb>=14?`<span class="tug-pct right">${Math.round(pb)}%</span>`:''}
+        </div>
+        <div class="tug-val b">${r.fmt(r.vb)}</div>
+      </div>
+      ${win&&sum>0?`<div class="tug-winner">👑 ${win} впереди</div>`:''}
+    </div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+// ── КАРТОЧКА ПРОДАВЦА ──
+function openSellerCard(id){ pointsState.view='card'; pointsState.sellerId=id; renderPoints(); }
+
+function viewSellerCard(){
+  const s=DB.sellers.find(x=>x.id===pointsState.sellerId);
+  if(!s){ pointsState.view='sellers'; return viewSellers(); }
+  // Продавец может смотреть только коллег со своих точек
+  if(currentUser.role!=='admin'){
+    const mine=sellerRooms(currentUser);
+    const theirs=sellerRooms(s);
+    if(!mine.some(r=>theirs.includes(r))){ pointsState.view='sellers'; return viewSellers(); }
+  }
+  const room=DB.showrooms.find(r=>r.id===s.showroomId);
+  const all=sellerMetrics(s.id,'all');
+  const cur=sellerMetrics(s.id,curMonth());
+  const monthly=sellerMonthly(s.id);
+
+  let html=`<button class="back-link" onclick="backToSellers()">← ${room?room.name:'Назад'}</button>
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:6px">
+      <div class="seller-avatar" style="width:54px;height:54px;font-size:19px">${initials(s.name)}</div>
+      <div><div class="page-title" style="margin-bottom:1px">${s.name}</div>
+      <div class="page-sub" style="margin-bottom:0">${room?roomLoc(room.id):'—'} · ${s.role==='admin'?'Администратор':'Продавец'}</div></div>
+    </div>`;
+
+  // Показатели текущего месяца
+  html+=`<div class="section-label" style="margin-top:18px">${mLabel(curMonth())}</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-lbl">Оборот</div><div class="stat-val blue">${fmoney(cur.total)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Кофемашины</div><div class="stat-val">${cur.machines} шт</div></div>
+      <div class="stat-box"><div class="stat-lbl">Оборот кофе</div><div class="stat-val">${fmoney(cur.coffeeRub)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Средний чек</div><div class="stat-val">${fmoney(cur.avg)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Заказов</div><div class="stat-val">${cur.orders}</div></div>
+    </div>`;
+
+  // График по месяцам
+  if(monthly.length){
+    const max=Math.max(...monthly.map(x=>x[1].total))||1;
+    const show=monthly.slice(-12);
+    html+=`<div class="trend-wrap">
+      <div class="section-label" style="margin-bottom:14px">📈 Оборот по месяцам</div>
+      <div class="trend-bars">`+
+      show.map(([mk,d])=>{
+        const h=Math.max((d.total/max)*100,2);
+        return `<div class="trend-col" title="${mLabel(mk)}: ${fmoney(d.total)}">
+          <div class="trend-val">${d.total>=1000?Math.round(d.total/1000)+'к':d.total}</div>
+          <div class="trend-bar" style="height:${h}%"></div>
+        </div>`;
+      }).join('')+
+      `</div><div class="trend-labels">`+
+      show.map(([mk])=>{const[y,mo]=mk.split('-');return`<div class="trend-label">${MRU[+mo-1].slice(0,3)}</div>`;}).join('')+
+      `</div></div>`;
+  }
+
+  // Итоги за всё время
+  html+=`<div class="section-label">За всё время</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-lbl">Оборот всего</div><div class="stat-val blue">${fmoney(all.total)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Кофемашин</div><div class="stat-val">${all.machines} шт</div></div>
+      <div class="stat-box"><div class="stat-lbl">Кофе, оборот</div><div class="stat-val">${fmoney(all.coffeeRub)}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Кофе, пачек</div><div class="stat-val">${all.coffeeQty}</div></div>
+      <div class="stat-box"><div class="stat-lbl">Всего заказов</div><div class="stat-val">${all.orders}</div></div>
+    </div>`;
+
+  // Таблица по месяцам
+  if(monthly.length){
+    html+=`<div class="card" style="padding:0;overflow:hidden">
+      <table class="log-table"><thead><tr><th>Месяц</th><th>Оборот</th><th>Кофе, ₽</th><th>Машин</th><th>Заказов</th><th>План</th></tr></thead><tbody>`;
+    monthly.slice().reverse().forEach(([mk,d])=>{
+      const plan=DB.plans[`${s.showroomId}_${mk}`]||0;
+      const roomFact=DB.sales.filter(x=>x.showroomId===s.showroomId&&x.date.startsWith(mk)).reduce((a,b)=>a+b.total,0);
+      const pct=plan>0?Math.round((roomFact/plan)*100):null;
+      const col=pct===null?'var(--text-dim)':(pct>=100?'var(--green)':pct>=70?'var(--blue)':'var(--red)');
+      html+=`<tr><td style="font-weight:600;color:var(--text)">${mLabel(mk)}</td>
+        <td class="mono">${fmoney(d.total)}</td>
+        <td class="mono">${fmoney(d.coffeeRub)}</td>
+        <td class="mono">${d.machines}</td>
+        <td class="mono">${d.orders}</td>
+        <td class="mono" style="color:${col}">${pct!==null?pct+'%':'—'}</td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  } else {
+    html+=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Продаж пока нет</div></div>`;
+  }
+  return html;
+}
+
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
