@@ -496,7 +496,7 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   <div class="login-box">
     <div class="login-logo">De'Longhi</div>
     <div class="login-sub">Учёт продаж · Введите PIN</div>
-    <div class="pin-display">
+    <div class="pin-display" id="pin-display">
       <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
       <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
     </div>
@@ -783,31 +783,40 @@ let pinBuf='';
 function pinKey(d){if(pinBuf.length>=4)return;pinBuf+=d;upDots();if(pinBuf.length===4)setTimeout(tryLogin,100);}
 function pinDel(){pinBuf=pinBuf.slice(0,-1);upDots();document.getElementById('login-error').textContent='';}
 function upDots(){for(let i=0;i<4;i++)document.getElementById('dot-'+i).classList.toggle('filled',i<pinBuf.length);}
+function setLoginBusy(busy){
+  const disp=document.getElementById('pin-display');
+  const pad=document.querySelector('.pin-pad');
+  const chk=document.getElementById('pin-checking');
+  if(disp) disp.classList.toggle('hidden',busy);
+  if(pad)  pad.classList.toggle('hidden',busy);
+  if(chk)  chk.classList.toggle('on',busy);
+}
+
 async function tryLogin(){
   const enteredPin = pinBuf; pinBuf=''; upDots();
-  // Прячем клавиатуру и точки, показываем спиннер
-  document.getElementById('pin-display').classList.add('hidden');
-  document.querySelector('.pin-pad').classList.add('hidden');
-  document.getElementById('pin-checking').classList.add('on');
-  document.getElementById('login-error').textContent='';
+  const errEl=document.getElementById('login-error');
+  if(errEl) errEl.textContent='';
+  setLoginBusy(true);
   syncStart();
 
-  DB = await fetchDB();
-  syncEnd();
+  let u=null;
+  try{
+    DB = await fetchDB();
+    u = DB.sellers.find(s=>s.pin===enteredPin&&!s.archived);
+  }catch(err){
+    console.error('Ошибка входа:', err);
+  }
 
-  const u=DB.sellers.find(s=>s.pin===enteredPin&&!s.archived);
-  // Возвращаем клавиатуру
-  document.getElementById('pin-checking').classList.remove('on');
-  document.getElementById('pin-display').classList.remove('hidden');
-  document.querySelector('.pin-pad').classList.remove('hidden');
+  syncEnd();
+  setLoginBusy(false);
 
   if(u){
     currentUser=u;
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-app').classList.add('active');
     initApp();
-  } else {
-    document.getElementById('login-error').textContent='Неверный PIN';
+  } else if(errEl){
+    errEl.textContent='Неверный PIN';
   }
 }
 function doLogout(){
