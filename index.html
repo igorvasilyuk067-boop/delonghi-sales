@@ -468,6 +468,30 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 /* Кнопка в состоянии сохранения */
 .btn.saving{opacity:.75;pointer-events:none;}
 
+
+/* ── МНОГОСЕГМЕНТНАЯ ШКАЛА СРАВНЕНИЯ ── */
+.scale-section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:0 1px 5px rgba(26,111,212,.05);}
+.scale-players{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.scale-player{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text);}
+.scale-dot-lg{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.scale-period{font-size:11px;color:var(--text-dim);font-weight:400;margin-left:auto;}
+
+.scale-metric{margin-bottom:22px;}
+.scale-metric:last-child{margin-bottom:0;}
+.scale-metric-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);text-align:center;margin-bottom:8px;}
+
+.scale-bar-multi{height:28px;border-radius:14px;overflow:hidden;display:flex;background:var(--surface3);box-shadow:inset 0 0 0 1px var(--border);}
+.scale-seg{height:100%;display:flex;align-items:center;justify-content:center;transition:width .6s ease;min-width:1px;position:relative;}
+.scale-seg:not(:last-child){border-right:1.5px solid rgba(255,255,255,.55);}
+.scale-seg-pct{color:#fff;font-size:10.5px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.2);white-space:nowrap;}
+
+.scale-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;margin-top:9px;}
+.scale-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-mid);}
+.scale-legend-item.scale-leader{color:var(--text);font-weight:700;}
+.scale-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.scale-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);}
+.scale-crown{font-size:12px;}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;font-size:12px;font-weight:500;border-radius:10px;transition:transform .3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
 #toast.show{transform:translateX(-50%) translateY(0);}
@@ -1645,109 +1669,69 @@ function selectAllCompare(){
   renderPoints();
 }
 
-// ── СРАВНЕНИЕ: 2 продавца → канат, 3+ → рейтинг по метрикам ──
+// ── СРАВНЕНИЕ: единая шкала на любое количество продавцов ──
 function renderCompare(ids,monthKey){
   if(ids.length<2){
-    return `<div class="tug-section"><div style="color:var(--text-dim);font-size:12px;text-align:center">Выберите минимум двух продавцов для сравнения</div></div>`;
+    return `<div class="scale-section"><div style="color:var(--text-dim);font-size:12px;text-align:center;padding:20px 0">Выберите минимум двух продавцов для сравнения</div></div>`;
   }
-  if(ids.length===2) return tugOfWar(ids[0],ids[1],monthKey);
-  return multiCompare(ids,monthKey);
+  return scaleCompare(ids,monthKey);
 }
 
-// ── ПЕРЕТЯГИВАНИЕ КАНАТА (ровно 2 продавца) ──
-function tugOfWar(idA,idB,monthKey){
-  const a=DB.sellers.find(s=>s.id===idA), b=DB.sellers.find(s=>s.id===idB);
-  if(!a||!b) return '';
-  const roomId=pointsState.showroomId;
-  const ca=sellerColor(idA,roomId), cb=sellerColor(idB,roomId);
-  const ma=sellerMetrics(idA,monthKey), mb=sellerMetrics(idB,monthKey);
-
-  const rows=[
-    { label:'Общий оборот',              va:ma.total,      vb:mb.total,      fmt:fmoney },
-    { label:'Оборот кофе',               va:ma.coffeeRub,  vb:mb.coffeeRub,  fmt:fmoney },
-    { label:'Кофемашины',                va:ma.machines,   vb:mb.machines,   fmt:v=>v+' шт' },
-    { label:'Средний чек с кофемашиной', va:ma.avgMachine, vb:mb.avgMachine, fmt:fmoney },
-    { label:'Заказов',                   va:ma.orders,     vb:mb.orders,     fmt:v=>v+'' },
-  ];
-
-  let html=`<div class="tug-section">
-    <div class="tug-header">
-      <div class="tug-player"><div class="tug-avatar" style="background:${ca.grad}">${initials(a.name)}</div>
-        <div><div class="tug-player-name">${a.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
-      <div class="tug-vs">VS</div>
-      <div class="tug-player right"><div class="tug-avatar" style="background:${cb.grad}">${initials(b.name)}</div>
-        <div><div class="tug-player-name">${b.name}</div><div class="tug-player-sub">${monthKey==='all'?'всё время':mLabel(monthKey)}</div></div></div>
-    </div>`;
-
-  rows.forEach(r=>{
-    const sum=r.va+r.vb;
-    const pa=sum>0?(r.va/sum)*100:50;
-    const pb=100-pa;
-    const win=r.va>r.vb?a.name:(r.vb>r.va?b.name:null);
-    html+=`<div class="tug-row">
-      <div class="tug-label">${r.label}</div>
-      <div class="tug-bar-wrap">
-        <div class="tug-val" style="color:${ca.solid};text-align:right">${r.fmt(r.va)}</div>
-        <div class="tug-bar">
-          <div class="tug-fill-a" style="width:${pa}%;background:${ca.grad}"></div>
-          <div class="tug-fill-b" style="width:${pb}%;background:${cb.grad}"></div>
-          <div class="tug-center"></div>
-          ${pa>=14?`<span class="tug-pct left">${Math.round(pa)}%</span>`:''}
-          ${pb>=14?`<span class="tug-pct right">${Math.round(pb)}%</span>`:''}
-        </div>
-        <div class="tug-val" style="color:${cb.solid};text-align:left">${r.fmt(r.vb)}</div>
-      </div>
-      ${win&&sum>0?`<div class="tug-winner">👑 ${win} впереди</div>`:''}
-    </div>`;
-  });
-  html+=`</div>`;
-  return html;
-}
-
-// ── СРАВНЕНИЕ 3 И БОЛЕЕ ПРОДАВЦОВ — рейтинг по каждой метрике ──
-function multiCompare(ids,monthKey){
+// ── МНОГОСЕГМЕНТНАЯ ШКАЛА (2, 3, 4 и более продавцов) ──
+function scaleCompare(ids,monthKey){
   const roomId=pointsState.showroomId;
   const data=ids.map(id=>({
     id, seller:DB.sellers.find(s=>s.id===id),
     color:sellerColor(id,roomId),
     m:sellerMetrics(id,monthKey)
   })).filter(d=>d.seller);
-
-  const metrics=[
-    { label:'🏆 Общий оборот, ₽',              val:d=>d.m.total,      fmt:v=>fmoney(v) },
-    { label:'💰 Оборот кофе, ₽',                val:d=>d.m.coffeeRub,  fmt:v=>fmoney(v) },
-    { label:'☕ Кофемашины',                    val:d=>d.m.machines,   fmt:v=>v+' шт' },
-    { label:'🧾 Средний чек с кофемашиной',     val:d=>d.m.avgMachine, fmt:v=>fmoney(v) },
-    { label:'📋 Заказов',                       val:d=>d.m.orders,     fmt:v=>v+'' },
-  ];
+  if(data.length<2) return '';
 
   const period=monthKey==='all'?'всё время':mLabel(monthKey);
-  let html=`<div class="tug-section">
-    <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;text-transform:uppercase">Сравнение ${ids.length} продавцов · ${period}</div>
-    <div class="analytics-grid" style="margin-bottom:0">`;
+
+  const metrics=[
+    { label:'🏆 Общий оборот',              val:d=>d.m.total,      fmt:v=>fmoney(v) },
+    { label:'💰 Оборот кофе',                val:d=>d.m.coffeeRub,  fmt:v=>fmoney(v) },
+    { label:'☕ Кофемашины',                 val:d=>d.m.machines,   fmt:v=>v+' шт' },
+    { label:'🧾 Средний чек с кофемашиной',  val:d=>d.m.avgMachine, fmt:v=>fmoney(v) },
+    { label:'📋 Заказов',                    val:d=>d.m.orders,     fmt:v=>v+'' },
+  ];
+
+  // Шапка с участниками
+  let html=`<div class="scale-section">
+    <div class="scale-players">${data.map(d=>
+      `<div class="scale-player"><span class="scale-dot-lg" style="background:${d.color.grad}"></span>${d.seller.name}</div>`
+    ).join('')}<span class="scale-period">· ${period}</span></div>`;
 
   metrics.forEach(metric=>{
-    const sorted=[...data].sort((a,b)=>metric.val(b)-metric.val(a));
-    const max=metric.val(sorted[0])||1;
-    html+=`<div class="an-card"><div class="an-card-title">${metric.label}</div>${
-      sorted.map((d,i)=>{
-        const v=metric.val(d);
-        const pct=max>0?Math.round((v/max)*100):0;
-        const isL=i===0&&v>0;
-        return`<div class="rank-row${isL?' leader':''}">
-          <div class="rank-num">${i+1}</div>
-          <div style="flex:1;min-width:0">
-            <div class="rank-name">${d.seller.name}</div>
-            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${d.color.solid}"></div></div>
-          </div>
-          <div class="rank-val">${metric.fmt(v)}</div>
-          <div class="rank-crown">${isL?'👑':''}</div>
-        </div>`;
-      }).join('')
-    }</div>`;
+    const withVals=data.map(d=>({...d,v:metric.val(d)}));
+    const sum=withVals.reduce((s,d)=>s+d.v,0);
+    const sorted=[...withVals].sort((a,b)=>b.v-a.v);
+    const leader=sum>0?sorted[0]:null;
+
+    // Сегменты в исходном порядке продавцов (стабильно, не прыгают местами)
+    const segments=withVals.map(d=>{
+      const pct=sum>0?(d.v/sum)*100:(100/withVals.length);
+      return {...d,pct};
+    });
+
+    html+=`<div class="scale-metric">
+      <div class="scale-metric-label">${metric.label}</div>
+      <div class="scale-bar-multi">${
+        segments.map(d=>`<div class="scale-seg" style="width:${d.pct}%;background:${d.color.grad}" title="${d.seller.name}: ${metric.fmt(d.v)}">${d.pct>=11?`<span class="scale-seg-pct">${Math.round(d.pct)}%</span>`:''}</div>`).join('')
+      }</div>
+      <div class="scale-legend">${
+        sorted.map((d,i)=>`<div class="scale-legend-item${i===0&&sum>0?' scale-leader':''}">
+          <span class="scale-dot" style="background:${d.color.solid}"></span>
+          <span>${d.seller.name}</span>
+          <span class="scale-val">${metric.fmt(d.v)}</span>
+          ${i===0&&sum>0?'<span class="scale-crown">👑</span>':''}
+        </div>`).join('')
+      }</div>
+    </div>`;
   });
 
-  html+=`</div></div>`;
+  html+=`</div>`;
   return html;
 }
 
