@@ -1457,7 +1457,7 @@ function activeRoomId(){
 // ══════════════════════════════════
 //  ТОЧКИ / КАРТОЧКИ ПРОДАВЦОВ
 // ══════════════════════════════════
-let pointsState = { view:'showrooms', showroomId:null, sellerId:null, month:'all', cmpA:null, cmpB:null };
+let pointsState = { view:'showrooms', showroomId:null, sellerId:null, month:'all', cmpSelected:null };
 
 function initials(name){
   const p=(name||'').trim().split(/\s+/);
@@ -1556,7 +1556,7 @@ function viewShowrooms(){
   return html;
 }
 
-function openShowroom(id){ if(!canViewRoom(id)){toast('Нет доступа к этой точке');return;} pointsState.view='sellers'; pointsState.showroomId=id; pointsState.cmpA=null; pointsState.cmpB=null; renderPoints(); }
+function openShowroom(id){ if(!canViewRoom(id)){toast('Нет доступа к этой точке');return;} pointsState.view='sellers'; pointsState.showroomId=id; pointsState.cmpSelected=null; renderPoints(); }
 function backToShowrooms(){ pointsState.view='showrooms'; renderPoints(); }
 function backToSellers(){ pointsState.view='sellers'; renderPoints(); }
 
@@ -1569,9 +1569,10 @@ function viewSellers(){
     .concat(DB.sellers.filter(s=>!s.archived&&s.role==='admin'&&s.showroomId===room.id));
   const m=pointsState.month;
 
-  // авто-выбор двух для сравнения
-  if(!pointsState.cmpA&&sellers[0]) pointsState.cmpA=sellers[0].id;
-  if(!pointsState.cmpB&&sellers[1]) pointsState.cmpB=sellers[1].id;
+  // По умолчанию сравниваем всех продавцов точки сразу
+  if(!pointsState.cmpSelected) pointsState.cmpSelected=sellers.map(s=>s.id);
+  // Убираем из выбора тех, кого больше нет на точке
+  pointsState.cmpSelected=pointsState.cmpSelected.filter(id=>sellers.some(s=>s.id===id));
 
   const multiRooms=currentUser.role==='admin'||sellerRooms(currentUser).length>1;
   let html=`${multiRooms?'<button class="back-link" onclick="backToShowrooms()">← Все точки</button>':''}
@@ -1612,33 +1613,49 @@ function viewSellers(){
     return html;
   }
 
-  // выбор кого с кем
+  // выбор кого сравнивать — можно любое количество
   html+=`<div class="section-label" style="margin-top:8px">⚔ Сравнение продавцов</div>
-    <div class="compare-sel"><span style="font-size:11px;color:var(--text-dim)">Кто:</span>`;
+    <div class="compare-sel"><span style="font-size:11px;color:var(--text-dim)">Кто сравниваем (${pointsState.cmpSelected.length}):</span>`;
   sellers.forEach(s=>{
-    const sel=(s.id===pointsState.cmpA||s.id===pointsState.cmpB);
+    const sel=pointsState.cmpSelected.includes(s.id);
     const sc=sellerColor(s.id,room.id);
     const st=sel?`background:${sc.solid};color:#fff;border-color:${sc.solid};font-weight:600;`:'';
     html+=`<button class="compare-chip" style="${st}" onclick="pickCompare('${s.id}')">${s.name}</button>`;
   });
+  if(pointsState.cmpSelected.length<sellers.length){
+    html+=`<button class="compare-chip" style="border-style:dashed" onclick="selectAllCompare()">+ Все (${sellers.length})</button>`;
+  }
   html+=`</div>`;
-  html+=tugOfWar(pointsState.cmpA,pointsState.cmpB,m);
+  html+=renderCompare(pointsState.cmpSelected,m);
   return html;
 }
 
 function setPointsMonth(m){ pointsState.month=m; renderPoints(); }
 function pickCompare(id){
-  if(pointsState.cmpA===id){ pointsState.cmpA=pointsState.cmpB; pointsState.cmpB=null; }
-  else if(pointsState.cmpB===id){ pointsState.cmpB=null; }
-  else if(!pointsState.cmpA){ pointsState.cmpA=id; }
-  else if(!pointsState.cmpB){ pointsState.cmpB=id; }
-  else { pointsState.cmpB=id; }
+  const i=pointsState.cmpSelected.indexOf(id);
+  if(i>-1) pointsState.cmpSelected.splice(i,1);
+  else pointsState.cmpSelected.push(id);
+  renderPoints();
+}
+function selectAllCompare(){
+  const room=DB.showrooms.find(r=>r.id===pointsState.showroomId);
+  const sellers=DB.sellers.filter(s=>!s.archived&&sellerRooms(s).includes(room.id)&&s.role!=='admin')
+    .concat(DB.sellers.filter(s=>!s.archived&&s.role==='admin'&&s.showroomId===room.id));
+  pointsState.cmpSelected=sellers.map(s=>s.id);
   renderPoints();
 }
 
-// ── ПЕРЕТЯГИВАНИЕ КАНАТА ──
+// ── СРАВНЕНИЕ: 2 продавца → канат, 3+ → рейтинг по метрикам ──
+function renderCompare(ids,monthKey){
+  if(ids.length<2){
+    return `<div class="tug-section"><div style="color:var(--text-dim);font-size:12px;text-align:center">Выберите минимум двух продавцов для сравнения</div></div>`;
+  }
+  if(ids.length===2) return tugOfWar(ids[0],ids[1],monthKey);
+  return multiCompare(ids,monthKey);
+}
+
+// ── ПЕРЕТЯГИВАНИЕ КАНАТА (ровно 2 продавца) ──
 function tugOfWar(idA,idB,monthKey){
-  if(!idA||!idB) return `<div class="tug-section"><div style="color:var(--text-dim);font-size:12px;text-align:center">Выберите двух продавцов для сравнения</div></div>`;
   const a=DB.sellers.find(s=>s.id===idA), b=DB.sellers.find(s=>s.id===idB);
   if(!a||!b) return '';
   const roomId=pointsState.showroomId;
@@ -1684,6 +1701,53 @@ function tugOfWar(idA,idB,monthKey){
     </div>`;
   });
   html+=`</div>`;
+  return html;
+}
+
+// ── СРАВНЕНИЕ 3 И БОЛЕЕ ПРОДАВЦОВ — рейтинг по каждой метрике ──
+function multiCompare(ids,monthKey){
+  const roomId=pointsState.showroomId;
+  const data=ids.map(id=>({
+    id, seller:DB.sellers.find(s=>s.id===id),
+    color:sellerColor(id,roomId),
+    m:sellerMetrics(id,monthKey)
+  })).filter(d=>d.seller);
+
+  const metrics=[
+    { label:'🏆 Общий оборот, ₽',              val:d=>d.m.total,      fmt:v=>fmoney(v) },
+    { label:'💰 Оборот кофе, ₽',                val:d=>d.m.coffeeRub,  fmt:v=>fmoney(v) },
+    { label:'☕ Кофемашины',                    val:d=>d.m.machines,   fmt:v=>v+' шт' },
+    { label:'🧾 Средний чек с кофемашиной',     val:d=>d.m.avgMachine, fmt:v=>fmoney(v) },
+    { label:'📋 Заказов',                       val:d=>d.m.orders,     fmt:v=>v+'' },
+  ];
+
+  const period=monthKey==='all'?'всё время':mLabel(monthKey);
+  let html=`<div class="tug-section">
+    <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;text-transform:uppercase">Сравнение ${ids.length} продавцов · ${period}</div>
+    <div class="analytics-grid" style="margin-bottom:0">`;
+
+  metrics.forEach(metric=>{
+    const sorted=[...data].sort((a,b)=>metric.val(b)-metric.val(a));
+    const max=metric.val(sorted[0])||1;
+    html+=`<div class="an-card"><div class="an-card-title">${metric.label}</div>${
+      sorted.map((d,i)=>{
+        const v=metric.val(d);
+        const pct=max>0?Math.round((v/max)*100):0;
+        const isL=i===0&&v>0;
+        return`<div class="rank-row${isL?' leader':''}">
+          <div class="rank-num">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div class="rank-name">${d.seller.name}</div>
+            <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${d.color.solid}"></div></div>
+          </div>
+          <div class="rank-val">${metric.fmt(v)}</div>
+          <div class="rank-crown">${isL?'👑':''}</div>
+        </div>`;
+      }).join('')
+    }</div>`;
+  });
+
+  html+=`</div></div>`;
   return html;
 }
 
