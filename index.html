@@ -417,6 +417,56 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
 .fc-proj{margin-top:5px;padding-top:6px;border-top:1px dashed var(--border);}
 .fc-proj .fc-lbl{font-weight:600;color:var(--text-mid);}
 
+
+/* ── ЗАГРУЗКА ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:.85}}
+@keyframes shimmer{0%{background-position:-380px 0}100%{background-position:380px 0}}
+
+.spinner{
+  width:26px;height:26px;border-radius:50%;
+  border:2.5px solid var(--border);border-top-color:var(--blue);
+  animation:spin .7s linear infinite;
+}
+.spinner.sm{width:16px;height:16px;border-width:2px;}
+.spinner.lg{width:34px;height:34px;border-width:3px;}
+
+/* Экран PIN во время проверки */
+.pin-checking{display:none;flex-direction:column;align-items:center;gap:14px;padding:34px 0 26px;}
+.pin-checking.on{display:flex;}
+.pin-checking-text{font-size:12px;color:var(--text-dim);letter-spacing:.08em;}
+.pin-pad.hidden,.pin-display.hidden{display:none;}
+
+/* Оверлей загрузки вкладки */
+.tab-loader{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:56px 20px;
+}
+.tab-loader-text{font-size:12px;color:var(--text-dim);animation:pulse 1.4s ease-in-out infinite;}
+
+/* Скелетоны */
+.sk{
+  background:linear-gradient(90deg,#EDF2FC 25%,#F7FAFF 50%,#EDF2FC 75%);
+  background-size:760px 100%;
+  animation:shimmer 1.3s linear infinite;
+  border-radius:8px;
+}
+.sk-row{height:58px;margin-bottom:9px;}
+.sk-card{height:120px;margin-bottom:12px;}
+.sk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+@media(max-width:640px){.sk-grid{grid-template-columns:1fr;}}
+
+/* Полоса синхронизации сверху */
+#sync-bar{
+  position:fixed;top:0;left:0;height:2.5px;width:0;
+  background:linear-gradient(90deg,var(--blue),var(--teal));
+  z-index:9998;transition:width .3s ease,opacity .3s;opacity:0;
+}
+#sync-bar.on{opacity:1;}
+
+/* Кнопка в состоянии сохранения */
+.btn.saving{opacity:.75;pointer-events:none;}
+
 /* ── TOAST ── */
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:11px 22px;font-size:12px;font-weight:500;border-radius:10px;transition:transform .3s;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
 #toast.show{transform:translateX(-50%) translateY(0);}
@@ -455,6 +505,10 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
       <div class="pin-key" onclick="pinKey('4')">4</div><div class="pin-key" onclick="pinKey('5')">5</div><div class="pin-key" onclick="pinKey('6')">6</div>
       <div class="pin-key" onclick="pinKey('7')">7</div><div class="pin-key" onclick="pinKey('8')">8</div><div class="pin-key" onclick="pinKey('9')">9</div>
       <div class="pin-key empty"></div><div class="pin-key" onclick="pinKey('0')">0</div><div class="pin-key del" onclick="pinDel()">⌫</div>
+    </div>
+    <div class="pin-checking" id="pin-checking">
+      <div class="spinner lg"></div>
+      <div class="pin-checking-text">Проверяем и загружаем данные…</div>
     </div>
     <div class="login-error" id="login-error"></div>
   </div>
@@ -639,6 +693,7 @@ select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.o
   </div>
 </div>
 
+<div id="sync-bar"></div>
 <div id="toast"></div>
 
 <script>
@@ -730,14 +785,30 @@ function pinDel(){pinBuf=pinBuf.slice(0,-1);upDots();document.getElementById('lo
 function upDots(){for(let i=0;i<4;i++)document.getElementById('dot-'+i).classList.toggle('filled',i<pinBuf.length);}
 async function tryLogin(){
   const enteredPin = pinBuf; pinBuf=''; upDots();
-  document.getElementById('login-error').textContent='Проверка...';
+  // Прячем клавиатуру и точки, показываем спиннер
+  document.getElementById('pin-display').classList.add('hidden');
+  document.querySelector('.pin-pad').classList.add('hidden');
+  document.getElementById('pin-checking').classList.add('on');
+  document.getElementById('login-error').textContent='';
+  syncStart();
+
   DB = await fetchDB();
+  syncEnd();
+
   const u=DB.sellers.find(s=>s.pin===enteredPin&&!s.archived);
-  if(u){currentUser=u;document.getElementById('login-error').textContent='';
+  // Возвращаем клавиатуру
+  document.getElementById('pin-checking').classList.remove('on');
+  document.getElementById('pin-display').classList.remove('hidden');
+  document.querySelector('.pin-pad').classList.remove('hidden');
+
+  if(u){
+    currentUser=u;
     document.getElementById('screen-login').classList.remove('active');
     document.getElementById('screen-app').classList.add('active');
     initApp();
-  } else document.getElementById('login-error').textContent='Неверный PIN';
+  } else {
+    document.getElementById('login-error').textContent='Неверный PIN';
+  }
 }
 function doLogout(){
   currentUser=null;
@@ -779,9 +850,14 @@ async function showTab(name,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(btn)btn.classList.add('active');
-  // Обновляем данные с сервера при переходе на вкладки с общими данными
+
+  // Вкладки с общими данными — показываем скелетон и тянем свежее с сервера
   if(['report','analytics','points','coffee','log','admin'].includes(name)){
-    await fetchDB(); DB=loadDB();
+    showTabSkeleton(name);
+    syncStart();
+    await fetchDB();
+    DB=loadDB();
+    syncEnd();
   }
   if(name==='report')renderReport();
   if(name==='analytics')renderAnalytics();
@@ -813,9 +889,18 @@ async function saveSale(){
   const total=items.reduce((s,i)=>s+i.total,0);
   const row={id:uid(),date:saleDate,orderNum,showroomId:activeRoomId(),sellerId:currentUser.id,items,total,createdAt:new Date().toISOString()};
   DB.sales.push(row); saveDB(DB);
-  toast('Сохраняю...');
+
+  const btn=document.querySelector('#tab-sales .btn-primary');
+  const btnHTML=btn?btn.innerHTML:'';
+  if(btn){btn.classList.add('saving');btn.innerHTML='<span class="spinner sm" style="border-top-color:#fff;border-color:rgba(255,255,255,.35);border-top-color:#fff"></span> Сохраняю…';}
+  syncStart();
+
   const ok=await apiCall('addSale',{row});
-  if(ok){toast(`Заказ ${orderNum} сохранён — ${fmoney(total)}`);clearItems();}
+
+  syncEnd();
+  if(btn){btn.classList.remove('saving');btn.innerHTML=btnHTML;}
+
+  if(ok){toast(`✓ Заказ ${orderNum} сохранён — ${fmoney(total)}`);clearItems();}
   else{DB.sales=DB.sales.filter(s=>s.id!==row.id);saveDB(DB);}
 }
 
@@ -1097,12 +1182,12 @@ function renderTree(){
   });
   if(!DB.regions.length)el.innerHTML='<div style="color:var(--text-dim);font-size:13px;margin-bottom:10px">Нет регионов</div>';
 }
-async function addRegion(){const name=document.getElementById('new-region').value.trim();if(!name){toast('Введите название');return;}DB=loadDB();const row={id:uid(),name};DB.regions.push(row);saveDB(DB);document.getElementById('new-region').value='';renderAdmin();await apiCall('addStructure',{row:{type:'region',id:row.id,name:row.name,parentId:''}});toast('Регион добавлен');}
-async function addCity(){const name=document.getElementById('new-city').value.trim();const regionId=document.getElementById('new-city-region').value;if(!name||!regionId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,regionId};DB.cities.push(row);saveDB(DB);document.getElementById('new-city').value='';renderAdmin();await apiCall('addStructure',{row:{type:'city',id:row.id,name:row.name,parentId:row.regionId}});toast('Город добавлен');}
-async function addShowroom(){const name=document.getElementById('new-showroom').value.trim();const cityId=document.getElementById('new-showroom-city').value;if(!name||!cityId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,cityId};DB.showrooms.push(row);saveDB(DB);document.getElementById('new-showroom').value='';renderAdmin();await apiCall('addStructure',{row:{type:'showroom',id:row.id,name:row.name,parentId:row.cityId}});toast('Шоурум добавлен');}
-async function deleteRegion(id){if(DB.cities.some(c=>c.regionId===id)){toast('Сначала удалите города');return;}if(!confirm('Удалить регион?'))return;DB=loadDB();DB.regions=DB.regions.filter(r=>r.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
-async function deleteCity(id){if(DB.showrooms.some(r=>r.cityId===id)){toast('Сначала удалите шоурумы');return;}if(!confirm('Удалить город?'))return;DB=loadDB();DB.cities=DB.cities.filter(c=>c.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
-async function deleteShowroom(id){if(!confirm('Удалить шоурум?'))return;DB=loadDB();DB.showrooms=DB.showrooms.filter(r=>r.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteStructure',{id});toast('Удалён');}
+async function addRegion(){const name=document.getElementById('new-region').value.trim();if(!name){toast('Введите название');return;}DB=loadDB();const row={id:uid(),name};DB.regions.push(row);saveDB(DB);document.getElementById('new-region').value='';renderAdmin();syncStart();await apiCall('addStructure',{row:{type:'region',id:row.id,name:row.name,parentId:''}});syncEnd();toast('Регион добавлен');}
+async function addCity(){const name=document.getElementById('new-city').value.trim();const regionId=document.getElementById('new-city-region').value;if(!name||!regionId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,regionId};DB.cities.push(row);saveDB(DB);document.getElementById('new-city').value='';renderAdmin();syncStart();await apiCall('addStructure',{row:{type:'city',id:row.id,name:row.name,parentId:row.regionId}});syncEnd();toast('Город добавлен');}
+async function addShowroom(){const name=document.getElementById('new-showroom').value.trim();const cityId=document.getElementById('new-showroom-city').value;if(!name||!cityId){toast('Заполните поля');return;}DB=loadDB();const row={id:uid(),name,cityId};DB.showrooms.push(row);saveDB(DB);document.getElementById('new-showroom').value='';renderAdmin();syncStart();await apiCall('addStructure',{row:{type:'showroom',id:row.id,name:row.name,parentId:row.cityId}});syncEnd();toast('Шоурум добавлен');}
+async function deleteRegion(id){if(DB.cities.some(c=>c.regionId===id)){toast('Сначала удалите города');return;}if(!confirm('Удалить регион?'))return;DB=loadDB();DB.regions=DB.regions.filter(r=>r.id!==id);saveDB(DB);renderAdmin();syncStart();await apiCall('deleteStructure',{id});syncEnd();toast('Удалён');}
+async function deleteCity(id){if(DB.showrooms.some(r=>r.cityId===id)){toast('Сначала удалите шоурумы');return;}if(!confirm('Удалить город?'))return;DB=loadDB();DB.cities=DB.cities.filter(c=>c.id!==id);saveDB(DB);renderAdmin();syncStart();await apiCall('deleteStructure',{id});syncEnd();toast('Удалён');}
+async function deleteShowroom(id){if(!confirm('Удалить шоурум?'))return;DB=loadDB();DB.showrooms=DB.showrooms.filter(r=>r.id!==id);saveDB(DB);renderAdmin();syncStart();await apiCall('deleteStructure',{id});syncEnd();toast('Удалён');}
 function renderAdminSellers(){
   const el=document.getElementById('admin-sellers');
   if(!DB.sellers.length){el.innerHTML='<div style="color:var(--text-dim);font-size:13px">Нет продавцов</div>';return;}
@@ -1186,7 +1271,7 @@ async function saveSellerEdit(id){
   saveDB(DB);
   if(currentUser.id===id) currentUser=DB.sellers[i];
   renderAdmin();
-  await apiCall('updateSeller',{row:DB.sellers[i]});
+  syncStart();await apiCall('updateSeller',{row:DB.sellers[i]});syncEnd();
   toast(wasRoom!==showroomId?'Продавец переведён на другую точку':'Сохранено');
 }
 
@@ -1195,7 +1280,7 @@ async function archiveSeller(id){
   if(!confirm('Отправить в архив? Продавец не сможет войти, вся статистика сохранится.'))return;
   DB=loadDB();
   const i=DB.sellers.findIndex(s=>s.id===id);
-  if(i>-1){DB.sellers[i].archived=true;saveDB(DB);renderAdmin();await apiCall('updateSeller',{row:DB.sellers[i]});}
+  if(i>-1){DB.sellers[i].archived=true;saveDB(DB);renderAdmin();syncStart();await apiCall('updateSeller',{row:DB.sellers[i]});syncEnd();}
   toast('В архиве');
 }
 
@@ -1205,16 +1290,16 @@ async function unarchiveSeller(id){
   if(i>-1){
     if(DB.sellers.find(s=>s.pin===DB.sellers[i].pin&&s.id!==id&&!s.archived)){toast('PIN занят — смените перед возвратом');return;}
     DB.sellers[i].archived=false;saveDB(DB);renderAdmin();
-    await apiCall('updateSeller',{row:DB.sellers[i]});
+    syncStart();await apiCall('updateSeller',{row:DB.sellers[i]});syncEnd();
   } else renderAdmin();
   toast('Возвращён в работу');
 }
 
-async function addSeller(){const name=document.getElementById('new-seller-name').value.trim();const showroomId=document.getElementById('new-seller-showroom').value;const role=document.getElementById('new-seller-role').value;const pin=document.getElementById('new-seller-pin').value.trim();if(!name||!showroomId){toast('Заполните имя и шоурум');return;}if(!/^\d{4}$/.test(pin)){toast('PIN — 4 цифры');return;}DB=loadDB();if(DB.sellers.find(s=>s.pin===pin)){toast('PIN уже занят');return;}const row={id:uid(),name,showroomId,role,pin,archived:false,extraRooms:[]};DB.sellers.push(row);saveDB(DB);document.getElementById('new-seller-name').value='';document.getElementById('new-seller-pin').value='';renderAdmin();await apiCall('addSeller',{row});toast('Продавец добавлен');}
-async function deleteSeller(id){if(id===currentUser.id){toast('Нельзя удалить себя');return;}if(!confirm('Удалить?'))return;DB=loadDB();DB.sellers=DB.sellers.filter(s=>s.id!==id);saveDB(DB);renderAdmin();await apiCall('deleteSeller',{id});toast('Удалён');}
+async function addSeller(){const name=document.getElementById('new-seller-name').value.trim();const showroomId=document.getElementById('new-seller-showroom').value;const role=document.getElementById('new-seller-role').value;const pin=document.getElementById('new-seller-pin').value.trim();if(!name||!showroomId){toast('Заполните имя и шоурум');return;}if(!/^\d{4}$/.test(pin)){toast('PIN — 4 цифры');return;}DB=loadDB();if(DB.sellers.find(s=>s.pin===pin)){toast('PIN уже занят');return;}const row={id:uid(),name,showroomId,role,pin,archived:false,extraRooms:[]};DB.sellers.push(row);saveDB(DB);document.getElementById('new-seller-name').value='';document.getElementById('new-seller-pin').value='';renderAdmin();syncStart();await apiCall('addSeller',{row});syncEnd();toast('Продавец добавлен');}
+async function deleteSeller(id){if(id===currentUser.id){toast('Нельзя удалить себя');return;}if(!confirm('Удалить?'))return;DB=loadDB();DB.sellers=DB.sellers.filter(s=>s.id!==id);saveDB(DB);renderAdmin();syncStart();await apiCall('deleteSeller',{id});syncEnd();toast('Удалён');}
 function renderPlanMonthSel(){const months=futurePlanMonths();const el=document.getElementById('plan-month-sel');el.innerHTML=months.map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');el.value=curMonth();}
 function renderPlanInputs(){DB=loadDB();const m=document.getElementById('plan-month-sel')?.value||curMonth();const el=document.getElementById('plan-inputs');if(!DB.showrooms.length){el.innerHTML='<div style="color:var(--text-dim);font-size:13px">Нет шоурумов</div>';return;}el.innerHTML=`<div class="admin-grid">${DB.showrooms.map(r=>`<div class="admin-item"><div><div class="admin-item-name">${r.name}</div><div class="admin-item-meta">${roomLoc(r.id)}</div></div><div style="display:flex;gap:7px;align-items:center;"><input class="fc" type="number" placeholder="0" value="${DB.plans[r.id+'_'+m]||''}" id="plan_${r.id}" style="width:140px;text-align:right;"><span style="font-size:11px;color:var(--text-dim)">₽</span><button class="btn btn-outline btn-xs" onclick="savePlan('${r.id}')">OK</button></div></div>`).join('')}</div>`;}
-async function savePlan(rid){const m=document.getElementById('plan-month-sel').value;const val=parseFloat(document.getElementById('plan_'+rid)?.value)||0;DB=loadDB();const key=`${rid}_${m}`;DB.plans[key]=val;saveDB(DB);await apiCall('setPlan',{key,value:val});toast('План сохранён');}
+async function savePlan(rid){const m=document.getElementById('plan-month-sel').value;const val=parseFloat(document.getElementById('plan_'+rid)?.value)||0;DB=loadDB();const key=`${rid}_${m}`;DB.plans[key]=val;saveDB(DB);syncStart();await apiCall('setPlan',{key,value:val});syncEnd();toast('План сохранён');}
 function exportCSV(){
   DB=loadDB();const rows=[['Дата','№ Заказа','Регион','Город','Шоурум','Продавец','Наименование','Категория','Кол-во','Сумма позиции','Итого заказа']];
   DB.sales.forEach(sale=>{const room=DB.showrooms.find(r=>r.id===sale.showroomId);const city=room?DB.cities.find(c=>c.id===room.cityId):null;const region=city?DB.regions.find(r=>r.id===city.regionId):null;const seller=DB.sellers.find(s=>s.id===sale.sellerId);sale.items.forEach(item=>{const cat=CATS.find(c=>c.id===item.cat);rows.push([sale.date,sale.orderNum||'',region?.name||'',city?.name||'',room?.name||'',seller?.name||'',item.name,cat?.label||'',item.qty,item.total,sale.total]);});});
@@ -1310,8 +1395,10 @@ async function saveEditModal() {
   const updated = { ...DB.sales[idx], date, orderNum, items, total: items.reduce((s, i) => s + i.total, 0) };
   DB.sales[idx] = updated; saveDB(DB);
   closeEditModal(); renderLogTable();
+  syncStart();
   const ok = await apiCall('updateSale', { row: updated });
-  toast(ok ? 'Продажа обновлена' : 'Не сохранено на сервере — попробуйте ещё раз');
+  syncEnd();
+  toast(ok ? '✓ Продажа обновлена' : 'Не сохранено на сервере — попробуйте ещё раз');
 }
 
 async function deleteSaleFromModal() {
@@ -1321,8 +1408,10 @@ async function deleteSaleFromModal() {
   DB.sales = DB.sales.filter(s => s.id !== saleId);
   saveDB(DB);
   closeEditModal(); renderLogTable();
+  syncStart();
   const ok = await apiCall('deleteSale', { id: saleId });
-  toast(ok ? 'Продажа удалена' : 'Не сохранено на сервере — обновите страницу');
+  syncEnd();
+  toast(ok ? '✓ Продажа удалена' : 'Не сохранено на сервере — обновите страницу');
 }
 
 
@@ -1667,6 +1756,59 @@ function viewSellerCard(){
     html+=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Продаж пока нет</div></div>`;
   }
   return html;
+}
+
+
+// ══════════════════════════════════
+//  ИНДИКАТОРЫ ЗАГРУЗКИ
+// ══════════════════════════════════
+let syncTimer=null;
+function syncStart(){
+  const b=document.getElementById('sync-bar');if(!b)return;
+  clearTimeout(syncTimer);
+  b.classList.add('on');b.style.width='12%';
+  setTimeout(()=>{b.style.width='55%';},120);
+  setTimeout(()=>{b.style.width='80%';},450);
+}
+function syncEnd(){
+  const b=document.getElementById('sync-bar');if(!b)return;
+  b.style.width='100%';
+  syncTimer=setTimeout(()=>{b.classList.remove('on');b.style.width='0';},350);
+}
+
+// Скелетон под конкретную вкладку
+function skeletonFor(name){
+  if(name==='analytics')
+    return `<div class="sk-grid">${'<div class="sk sk-card"></div>'.repeat(6)}</div><div class="sk sk-card" style="height:150px"></div>`;
+  if(name==='report')
+    return `<div class="sk-grid" style="grid-template-columns:1fr 1fr 1fr">${'<div class="sk" style="height:66px"></div>'.repeat(3)}</div>${'<div class="sk sk-card" style="height:96px"></div>'.repeat(2)}`;
+  if(name==='points')
+    return `<div class="sk-grid">${'<div class="sk sk-card" style="height:150px"></div>'.repeat(2)}</div><div class="sk sk-card" style="height:230px"></div>`;
+  if(name==='coffee')
+    return `${'<div class="sk sk-card" style="height:80px"></div>'.repeat(2)}<div class="sk-grid" style="grid-template-columns:repeat(5,1fr)">${'<div class="sk" style="height:62px"></div>'.repeat(5)}</div>`;
+  if(name==='log')
+    return `${'<div class="sk sk-row"></div>'.repeat(7)}`;
+  if(name==='admin')
+    return `${'<div class="sk sk-card" style="height:92px"></div>'.repeat(4)}`;
+  return `<div class="tab-loader"><div class="spinner"></div><div class="tab-loader-text">Загружаем…</div></div>`;
+}
+
+// Куда рисовать скелетон в каждой вкладке
+const TAB_SKELETON_TARGET={
+  report:   ['report-stats','report-showrooms'],
+  analytics:['analytics-grid','analytics-plans'],
+  points:   ['points-view'],
+  coffee:   ['coffee-content'],
+  log:      ['log-content'],
+  admin:    ['admin-tree','admin-sellers','plan-inputs'],
+};
+
+function showTabSkeleton(name){
+  const targets=TAB_SKELETON_TARGET[name];
+  if(!targets)return;
+  const first=document.getElementById(targets[0]);
+  if(first) first.innerHTML=skeletonFor(name);
+  targets.slice(1).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
 }
 
 let toastTimer;
